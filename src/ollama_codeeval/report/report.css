@@ -1,0 +1,340 @@
+/* ============================================================
+   LLM Benchmark Report — Modern Minimal Design
+   ============================================================ */
+
+/* Reset & base */
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+    font-family: system-ui, -apple-system, sans-serif;
+    font-size: 15px;
+    line-height: 1.5;
+    color: #1e293b;
+    background: #fafafa;
+    margin: 0;
+    padding: 0;
+}
+
+.page-content {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 1.5rem 2rem 3rem;
+}
+
+/* ── Sticky top nav ── */
+.top-nav {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: #1e293b;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 0 2rem;
+    height: 48px;
+    box-shadow: 0 2px 6px rgba(0,0,0,.25);
+}
+
+.nav-brand {
+    font-weight: 700;
+    font-size: 1rem;
+    color: #f1f5f9;
+    margin-right: auto;
+}
+
+.top-nav a {
+    color: #94a3b8;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    transition: color 0.15s;
+}
+
+.top-nav a:hover { color: #fff; }
+.top-nav a.active { color: #fff; font-weight: 700; }
+
+/* ── Headings ── */
+h1, h2, h3, h4 {
+    color: #0f172a;
+    margin-top: 2rem;
+    margin-bottom: 0.5rem;
+}
+h1 { font-size: 1.75rem; margin-top: 1.5rem; }
+h2 { font-size: 1.25rem; }
+h4 { font-size: 1rem; }
+
+/* ── Stat cards ── */
+.stat-cards {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin: 1rem 0 1.5rem;
+}
+
+.stat-card {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,.12);
+    padding: 1rem 1.5rem;
+    min-width: 180px;
+    flex: 1;
+}
+
+.stat-card .stat-label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #64748b;
+    margin-bottom: 0.25rem;
+}
+
+.stat-card .stat-value {
+    font-size: 1.6rem;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.stat-card .stat-sub {
+    font-size: 0.8rem;
+    color: #64748b;
+    margin-top: 0.1rem;
+}
+
+.stat-card.accent-blue  .stat-value { color: #2563eb; }
+.stat-card.accent-amber .stat-value { color: #d97706; }
+.stat-card.accent-green .stat-value { color: #16a34a; }
+
+/* ── Model info header badges ── */
+.model-info {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin: 0.25rem 0;
+    align-items: center;
+}
+
+.info-model-name {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #e67e22;
+    white-space: nowrap;
+}
+
+.info-badge {
+    display: inline-block;
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    border-radius: 20px;
+    padding: 0.15rem 0.7rem;
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: #475569;
+    white-space: nowrap;
+}
+
+.info-badge--caps {
+    color: #16a34a;
+    border-color: #bbf7d0;
+}
+
+.info-badge--mono {
+    font-family: Consolas, Monaco, 'Courier New', monospace;
+    font-size: 0.72rem;
+}
+
+/* ── Tables ── */
+table {
+    max-width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 1.5rem;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,.08);
+    overflow: hidden;
+}
+
+thead tr {
+    background: #1e293b;
+    color: #f1f5f9;
+}
+
+th {
+    padding: 10px 12px;
+    text-align: left;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+td {
+    padding: 9px 12px;
+    border-bottom: 1px solid #f1f5f9;
+    font-size: 0.9rem;
+}
+
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover td { background: #f8fafc; }
+tbody tr:nth-child(even) td { background: #f8fafc; }
+tbody tr:nth-child(even):hover td { background: #f1f5f9; }
+
+/* Remove old group banding; keep rows cleanly alternating */
+tr.group-even td, tr.group-odd td { background: inherit; }
+
+/* Secondary columns hidden by default */
+.col-secondary { display: none; }
+
+/* ── Sortable headers ── */
+th.sortable {
+    cursor: pointer;
+    user-select: none;
+    position: relative;
+    padding-right: 20px;
+}
+th.sortable::after {
+    content: '\2195';
+    position: absolute;
+    right: 5px;
+    opacity: 0.4;
+    font-size: 0.75em;
+}
+th.sortable.sort-asc::after  { content: '\25b2'; opacity: 0.8; }
+th.sortable.sort-desc::after { content: '\25bc'; opacity: 0.8; }
+
+/* ── Breadcrumb ── */
+.breadcrumb {
+    font-size: 0.85rem;
+    color: #64748b;
+    margin: 0.75rem 0 1.5rem;
+}
+.breadcrumb a { color: #2563eb; text-decoration: none; }
+.breadcrumb a:hover { text-decoration: underline; }
+.breadcrumb span { margin: 0 0.4em; }
+
+/* ── Links ── */
+a { color: #2563eb; text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* ── Collapsible details ── */
+details {
+    margin-bottom: 1rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    background: #fff;
+}
+
+summary {
+    cursor: pointer;
+    font-weight: 600;
+    color: #1e293b;
+    padding: 0.6rem 0.9rem 0.6rem 2.4rem;
+    border-radius: 6px;
+    background: #f1f5f9;
+    list-style: none;
+    position: relative;
+    user-select: none;
+}
+summary::-webkit-details-marker { display: none; }
+summary::before {
+    content: "▶";
+    position: absolute;
+    left: 0.75rem;
+    font-size: 0.85em;
+    color: #64748b;
+    transition: transform 0.15s ease;
+    display: inline-block;
+}
+details[open] > summary::before { transform: rotate(90deg); }
+summary:hover { background: #e2e8f0; }
+details[open] summary { border-bottom: 1px solid #e2e8f0; border-radius: 6px 6px 0 0; }
+
+/* ── Code blocks ── */
+pre {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 0.75rem 1rem;
+    overflow-x: auto;
+    margin: 0;
+}
+
+code {
+    font-family: Consolas, Monaco, 'Courier New', monospace;
+    font-size: 0.875em;
+}
+
+/* ── Show/hide toggle button ── */
+.btn-toggle {
+    background: #fff;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    padding: 0.35rem 0.85rem;
+    font-size: 0.82rem;
+    cursor: pointer;
+    color: #475569;
+    margin-bottom: 0.75rem;
+}
+.btn-toggle:hover { background: #f1f5f9; }
+
+/* ── Result dots (pass/fail per model in task rows) ── */
+.dot {
+    display: inline-block;
+    width: 1.1em;
+    text-align: center;
+    font-size: 1.2em;
+}
+.dot-pass    { color: green; }
+.dot-fail    { color: red; }
+.dot-rewrite { color: #2980b9; }
+.dot-norun   { color: #ccc; }
+
+/* ── Pass/fail text labels ── */
+.pass      { color: green; }
+.fail      { color: red; }
+.pass-bold { color: green; font-weight: bold; }
+
+/* ── Difficulty signals definition list ── */
+.signals-dl {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 2px 16px;
+}
+
+/* ── Task legend ── */
+.legend      { margin-bottom: 12px; }
+.legend-note { font-size: 0.85em; color: #555; }
+
+/* ── Cascade page ── */
+.cascade-diagram {
+    display: block;
+    max-width: 800px;
+    margin: 1.5rem auto;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 1rem;
+}
+.cascade-config {
+    max-width: 500px;
+}
+.cascade-config td:first-child { font-weight: 600; }
+.note {
+    color: #64748b;
+    font-style: italic;
+    padding: 1rem;
+    background: #f8fafc;
+    border-radius: 6px;
+    border: 1px dashed #cbd5e1;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+    .page-content { padding: 1rem; }
+    h1 { font-size: 1.4rem; }
+    th, td { padding: 7px 8px; }
+    .stat-cards { flex-direction: column; }
+}

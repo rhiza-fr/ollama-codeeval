@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Animated Model Performance</title>
+    <script src="plotly.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 2rem;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 2rem;
+        }
+        
+        h1 {
+            color: #1f2937;
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        
+        .subtitle {
+            color: #6b7280;
+            font-size: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        #plotly-chart {
+            width: 100%;
+            height: 700px;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background: #f9fafb;
+            border-radius: 8px;
+        }
+        
+        .controls button {
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .controls button.primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .controls button.primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        .controls button.secondary {
+            background: white;
+            color: #4b5563;
+            border: 2px solid #e5e7eb;
+        }
+        
+        .controls button.secondary:hover {
+            border-color: #667eea;
+            color: #667eea;
+        }
+        
+        .leader-indicator {
+            flex: 1;
+            text-align: right;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #1f2937;
+        }
+        
+        .leader-name {
+            color: #667eea;
+        }
+        
+        .leader-history {
+            margin-top: 2rem;
+            padding: 1rem 1.5rem;
+            background: linear-gradient(135deg, #e0f2fe 0%, #ddd6fe 100%);
+            border-radius: 12px;
+            border: 2px solid #c7d2fe;
+            min-height: 180px;
+        }
+
+        .leader-history h3 {
+            color: #1e40af;
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            position: sticky;
+            top: 0;
+            background: inherit;
+        }
+
+        .leader-history-entry {
+            color: #1e3a8a;
+            font-size: 0.95rem;
+            padding: 0.2rem 0;
+        }
+
+        .leader-history-entry.current {
+            font-weight: 700;
+            color: #1e40af;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Model Performance Race</h1>
+        <p class="subtitle">Watch as models compete over time</p>
+        
+        <div id="plotly-chart"></div>
+        
+        <div class="controls">
+            <button class="primary" onclick="playAnimation()">▶ Play Animation</button>
+            <button class="secondary" onclick="pauseAnimation()">⏸ Pause</button>
+            <button class="secondary" onclick="resetAnimation()">↺ Reset</button>
+            <div class="leader-indicator">
+                Current Leader: <span class="leader-name" id="leader-name">Starting...</span>
+            </div>
+        </div>
+        
+        <div class="leader-history">
+            <h3>Leadership History</h3>
+            <div id="leader-history-list"></div>
+        </div>
+    </div>
+
+    <script>
+        //const data = ${JSON.stringify(JSON.parse(document.querySelector('antml\\:document[index="2"]').textContent))};
+let data;
+fetch('../../../output/processed_results.json')
+    .then(response => response.json())
+    .then(jsonData => {
+        data = jsonData;
+        initializeVisualization(); // This will run AFTER data loads
+    })
+    .catch(error => console.error('Error loading data:', error));
+
+function displayName(key) {
+    return key
+        .replace(/_think=False/g, '')
+        .replace(/_dataset=humaneval/g, '')
+        .replace(/_tag=(\S+)/g, ' [$1]')  // non-empty tag: show as [value]
+        .replace(/_tag=/g, '');            // empty tag: remove
+}
+
+// Declare these at module scope so other functions can access them
+let modelNames, filteredModels, animationTimePoints, frames, maxTime, colors;
+
+function initializeVisualization() {
+    // Filter models based on criteria
+    filteredModels = {}; // Remove 'const'
+    Object.entries(data).forEach(([name, modelData]) => {
+        // Only default humaneval dataset
+        if (!name.includes('dataset=humaneval_')) return;
+        // Only runs that completed all 164 problems
+        const uniqueTasks = modelData.metadata && modelData.metadata.unique_tasks;
+        if (!uniqueTasks || uniqueTasks < 164) return;
+
+        filteredModels[name] = modelData;
+    });
+    
+    modelNames = Object.keys(filteredModels); // Remove 'const'
+    colors = [ // Remove 'const'
+        '#0ea5e9', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981',
+        '#6366f1', '#ef4444', '#14b8a6', '#f97316', '#a855f7',
+        '#06b6d4', '#84cc16', '#f43f5e', '#22c55e'
+    ];
+    
+    // Find max time across all models
+    maxTime = 40;//Math.max(...Object.values(filteredModels).map(m => 
+        //m.timeseries.times[m.timeseries.times.length - 1]
+    //)); // Remove 'const'
+    
+    // Create time points for animation (every 0.5 seconds)
+    animationTimePoints = []; // Remove 'const'
+    for (let t = 0; t <= maxTime; t += 0.5) {
+        animationTimePoints.push(t);
+    }
+
+    // Interpolation function (move inside or keep outside, but needs access to data)
+    function interpolate(times, rates, targetTime) {
+        if (targetTime <= times[0]) return rates[0];
+        if (targetTime >= times[times.length - 1]) return rates[times.length - 1];
+        
+        for (let i = 1; i < times.length; i++) {
+            if (targetTime <= times[i]) {
+                const t0 = times[i-1], t1 = times[i];
+                const r0 = rates[i-1], r1 = rates[i];
+                return r0 + (r1 - r0) * (targetTime - t0) / (t1 - t0);
+            }
+        }
+        return rates[rates.length - 1];
+    }
+    
+    // Find leader at each time point
+    function findLeader(time) {
+        let maxRate = -1;
+        let leader = null;
+        
+        modelNames.forEach(name => {
+            const rate = interpolate(
+                filteredModels[name].timeseries.times,
+                filteredModels[name].timeseries.success_rates,
+                time
+            );
+            if (rate > maxRate) {
+                maxRate = rate;
+                leader = name;
+            }
+        });
+        
+        return { leader, maxRate };
+    }
+        
+       frames = animationTimePoints.map(time => {
+    const { leader, maxRate } = findLeader(time);
+    
+    const traces = modelNames.map((name, idx) => {
+        const activeSrc = filteredModels[name].timeseries;
+        const times = activeSrc.times;
+        const rates = activeSrc.success_rates;
+        const lastTime = times[times.length - 1];
+        const lastRate = rates[rates.length - 1];
+        
+        // Get data up to current time
+        const visibleData = times.reduce((acc, t, i) => {
+            if (t <= time) {
+                acc.x.push(t);
+                acc.y.push(rates[i]);
+            }
+            return acc;
+        }, { x: [], y: [] });
+        
+        // If current animation time is past this model's last data point,
+        // extend the line flat to the current time
+        if (time > lastTime && visibleData.x.length > 0) {
+            visibleData.x.push(time);
+            visibleData.y.push(lastRate);
+        }
+        
+        const isLeader = name === leader;
+        
+        return {
+            x: visibleData.x,
+            y: visibleData.y,
+            name: displayName(name),
+            type: 'scatter',
+            mode: 'lines',
+            line: {
+                width: isLeader ? 3.5 : 2,
+                color: colors[idx % colors.length],
+                shape: 'linear'
+            },
+            opacity: isLeader ? 1.0 : 0.2,
+            hovertemplate: '<b>%{fullData.name}</b><br>Time: %{x:.1f}s<br>Success: %{y:.1f}%<extra></extra>'
+        };
+    });
+    
+    // Dynamic Y-axis range
+    const yMin = 0 // Math.max(0, maxRate - 20);
+    const yMax = Math.min(100, maxRate + 10);
+    
+    return {
+        name: time.toFixed(1),
+        leaderRate: maxRate,
+        data: traces,
+        layout: {
+            'yaxis.range': [yMin, yMax],
+            title: { text: `Model Performance at ${time.toFixed(1)}s - Leader: ${displayName(leader)}` }
+        }
+    };
+});
+        
+        // Initial traces
+        const initialTraces = modelNames.map((name, idx) => ({
+            x: [0],
+            y: [0],
+            name: displayName(name),
+            type: 'scatter',
+            mode: 'lines',
+            line: {
+                width: 2,
+                color: colors[idx % colors.length],
+                shape: 'spline'
+            },
+            opacity: 0.2,
+            hovertemplate: '<b>%{fullData.name}</b><br>Time: %{x:.1f}s<br>Success: %{y:.1f}%<extra></extra>'
+        }));
+        
+        const layout = {
+            title: {
+                text: 'Model Performance Over Time',
+                font: {
+                    family: 'Inter, system-ui, -apple-system, sans-serif',
+                    size: 24,
+                    color: '#1f2937',
+                },
+                x: 0.05,
+                xanchor: 'left'
+            },
+            xaxis: {
+                title: {
+                    text: 'Time budget per problem (seconds)',
+                    font: { family: 'Inter', size: 14, color: '#4b5563' },
+                    standoff: 15
+                },
+                gridcolor: '#e5e7eb',
+                gridwidth: 1,
+                zeroline: false,
+                showline: true,
+                linewidth: 2,
+                linecolor: '#d1d5db',
+                range: [0, maxTime],
+                tickfont: { family: 'Inter', size: 12, color: '#6b7280' }
+            },
+            yaxis: {
+                title: {
+                    text: 'Success Percentage (%)',
+                    font: { family: 'Inter', size: 14, color: '#4b5563' },
+                    standoff: 15
+                },
+                gridcolor: '#e5e7eb',
+                gridwidth: 1,
+                zeroline: false,
+                showline: true,
+                linewidth: 2,
+                linecolor: '#d1d5db',
+                range: [0, 100],
+                tickfont: { family: 'Inter', size: 12, color: '#6b7280' }
+            },
+            plot_bgcolor: '#ffffff',
+            paper_bgcolor: '#ffffff',
+            hovermode: 'closest',
+            hoverlabel: {
+                bgcolor: '#1f2937',
+                font: { family: 'Inter', size: 13, color: '#ffffff' }
+            },
+            legend: {
+                orientation: 'v',
+                yanchor: 'middle',
+                y: 0.5,
+                xanchor: 'left',
+                x: 1.02,
+                font: { family: 'Inter', size: 11, color: '#374151' },
+                bgcolor: 'rgba(255, 255, 255, 0.95)',
+                bordercolor: '#e5e7eb',
+                borderwidth: 1
+            },
+            margin: { l: 80, r: 250, t: 80, b: 70 }
+        };
+        
+        const config = {
+            responsive: true,
+            displayModeBar: true,
+            displaylogo: false,
+            modeBarButtonsToRemove: ['lasso2d', 'select2d']
+        };
+        
+    // This will now run AFTER everything is set up
+    Plotly.newPlot('plotly-chart', initialTraces, layout, config).then(() => {
+        Plotly.addFrames('plotly-chart', frames);
+    });
+}
+        
+        function playAnimation() {
+            Plotly.animate('plotly-chart', null, {
+                frame: { duration: 200, redraw: true },
+                transition: { duration: 1, easing: 'linear' },
+                fromcurrent: true,
+                mode: 'immediate'
+            });
+
+            const historyList = document.getElementById('leader-history-list');
+            historyList.innerHTML = '';
+            let lastLeader = null;
+            let frameIndex = 0;
+            const interval = setInterval(() => {
+                if (frameIndex < frames.length) {
+                    const currentFrame = frames[frameIndex];
+                    const leaderName = currentFrame.layout.title.text.split('Leader: ')[1];
+                    const time = parseFloat(currentFrame.name);
+                    document.getElementById('leader-name').textContent = leaderName;
+
+                    if (leaderName !== lastLeader && time >= 0.5) {
+                        const prev = historyList.querySelector('.current');
+                        if (prev) prev.classList.remove('current');
+                        const entry = document.createElement('div');
+                        entry.className = 'leader-history-entry current';
+                        const rate = currentFrame.leaderRate.toFixed(1);
+                        entry.textContent = `${time.toFixed(1)}s: ${leaderName} — ${rate}%`;
+                        historyList.insertBefore(entry, historyList.firstChild);
+                        lastLeader = leaderName;
+                    }
+                    frameIndex++;
+                } else {
+                    clearInterval(interval);
+                }
+            }, 100);
+        }
+        
+        function pauseAnimation() {
+            Plotly.animate('plotly-chart', null, {
+                mode: 'immediate',
+                frame: { duration: 0 }
+            });
+        }
+        
+        function resetAnimation() {
+            Plotly.animate('plotly-chart', [frames[0].name], {
+                frame: { duration: 0, redraw: true },
+                transition: { duration: 0 },
+                mode: 'immediate'
+            });
+            document.getElementById('leader-name').textContent = 'Starting...';
+            document.getElementById('leader-history-list').innerHTML = '';
+        }
+        
+    </script>
+</body>
+</html>

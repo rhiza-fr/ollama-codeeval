@@ -1,0 +1,53 @@
+[project]
+name = "ollama-codeeval"
+version = "0.1.1"
+description = "Automated evaluation of LLM code generation using HumanEval benchmarks via Ollama"
+readme = "README.md"
+license = "MIT"
+authors = [
+    { name = "Chris Kilner", email = "chris@rhiza.fr" }
+]
+requires-python = ">=3.12"
+keywords = ["llm", "evaluation", "humaneval", "ollama", "benchmark", "code-generation"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Software Development :: Testing",
+]
+
+dependencies = [
+    "llm-sandbox[docker]>=0.3.16",
+    "matplotlib>=3.10.6",
+    "numpy>=2.3.1",
+    "ollama-think>=0.1.9",
+    "pandas>=2.3.1",
+    "plotly>=6.3.0",
+    "rich>=14.3.2",
+    "scipy>=1.16.2",
+    "typer>=0.12.5",
+]
+
+[project.urls]
+Repository = "https://github.com/ckilner/ollama-codeeval"
+Issues = "https://github.com/ckilner/ollama-codeeval/issues"
+Results = "https://ckilner.github.io/ollama-codeeval/"
+
+[project.scripts]
+ollama-codeeval = "ollama_codeeval.cli:app"
+
+[build-system]
+requires = ["uv_build"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.4.1",
+    "pytest-cov>=6.2.1",
+    "ruff>=0.12.3",
+]
+

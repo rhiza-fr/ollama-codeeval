@@ -1,0 +1,20 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+.venv/
+.deepeval/
+.ollama_cache/
+.vscode/
+original_output/
+*.jsonl
+.*_cache/
+output/
+
+.claude/
+.coverage
+.pi/
