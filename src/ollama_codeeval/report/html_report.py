@@ -54,7 +54,6 @@ def write_summary_json(all_data):
 
 def main(no_cache=False):
     all_data = get_all_data(no_cache=no_cache)
-    print("About to do full count on all_data", len(all_data))
     full_count = max(d["total_tests"] for d in all_data)
     all_data = [d for d in all_data if d["total_tests"] == full_count]
     base_data = [d for d in all_data if d.get("dataset", "humaneval") == "humaneval"]
