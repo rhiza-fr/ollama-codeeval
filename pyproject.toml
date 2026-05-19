@@ -33,9 +33,9 @@ dependencies = [
 ]
 
 [project.urls]
-Repository = "https://github.com/ckilner/ollama-codeeval"
-Issues = "https://github.com/ckilner/ollama-codeeval/issues"
-Results = "https://ckilner.github.io/ollama-codeeval/"
+Repository = "https://github.com/rhiza-fr/ollama-codeeval"
+Issues = "https://github.com/rhiza-fr/ollama-codeeval/issues"
+Results = "https://ai.rhiza.fr/humaneval/"
 
 [project.scripts]
 ollama-codeeval = "ollama_codeeval.cli:app"

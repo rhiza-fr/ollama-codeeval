@@ -4,7 +4,8 @@
 
 Automated evaluation of LLM code generation using the [HumanEval](https://github.com/openai/human-eval) benchmark. Models are queried via [Ollama](https://ollama.com), generated solutions are executed in a Docker sandbox, and results are scored and reported.
 
-[View published results](https://ai.rhiza.fr/humaneval/)
+## Results
+[View published results for ~40 local models](https://ai.rhiza.fr/humaneval/)
 
 ## Features
 
