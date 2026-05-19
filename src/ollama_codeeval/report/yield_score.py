@@ -1,12 +1,12 @@
-"""Log-Time AUC (LTA) — area under success_rate(t) in ln(t) space, normalized to [0, 1]."""
+"""Log-Time Yield — area under success_rate(t) in ln(t) space, normalized to [0, 1]."""
 
 import bisect
 import math
 
 
-def compute_lta(times: list[float], rates: list[float], t_min: float, t_max: float) -> float:
+def compute_yield(times: list[float], rates: list[float], t_min: float, t_max: float) -> float:
     """
-    Compute Log-Time AUC for a step-function timeseries.
+    Compute Log-Time Yield for a step-function timeseries.
 
     times: sorted event times (seconds), each marks when a task completed
     rates: success rate (0–100) at each event time

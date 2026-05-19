@@ -1,6 +1,6 @@
 import pytest
 from ollama_codeeval.report._shared import compute_yield
-from ollama_codeeval.report.html_index import _compute_all_lta
+from ollama_codeeval.report.html_index import _compute_all_yield
 
 
 def _make_task(exit_code, durations_ns):
@@ -38,27 +38,27 @@ class TestComputeYield:
         ]))
 
 
-class TestComputeAllLta:
-    def test_adds_lta_key(self):
+class TestComputeAllYield:
+    def test_adds_yield_key(self):
         all_data = [
             {"tasks": [_make_task(0, [1_000_000_000])], "model": "a"},
             {"tasks": [_make_task(0, [10_000_000_000])], "model": "b"},
         ]
-        _compute_all_lta(all_data)
-        assert "lta" in all_data[0]
-        assert "lta" in all_data[1]
+        _compute_all_yield(all_data)
+        assert "yield" in all_data[0]
+        assert "yield" in all_data[1]
 
     def test_faster_model_scores_higher(self):
         all_data = [
             {"tasks": [_make_task(0, [1_000_000_000])], "model": "fast"},
             {"tasks": [_make_task(0, [10_000_000_000])], "model": "slow"},
         ]
-        _compute_all_lta(all_data)
-        assert float(str(all_data[0]["lta"])) > float(str(all_data[1]["lta"]))
+        _compute_all_yield(all_data)
+        assert float(str(all_data[0]["yield"])) > float(str(all_data[1]["yield"]))
 
     def test_no_successes_scores_zero(self):
         all_data = [
             {"tasks": [_make_task(1, [5_000_000_000])], "model": "fail"},
         ]
-        _compute_all_lta(all_data)
-        assert all_data[0]["lta"] == 0.0
+        _compute_all_yield(all_data)
+        assert all_data[0]["yield"] == 0.0

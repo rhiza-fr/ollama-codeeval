@@ -108,7 +108,6 @@ Charts include:
 - Error type breakdowns
 - Response time and token length distributions
 - Performance envelope analysis
-- **Log-Time AUC (LTA)**: a single quality metric weighting speed and accuracy equally across orders of magnitude
 - **Yield score**: success probability within a patience threshold (τ)
 - **Dumbbell charts** for rewrite comparison
 - **Combined progression** charts tracking pass rate across attempts, iterations, and rewrites
@@ -258,7 +257,7 @@ src/ollama_codeeval/
     html_yield.py           - Yield analysis page
     html_selector.py        - Model selector page (VRAM + τ filtering)
     html_setup.py           - Setup report page (flow diagram, config, machine profile)
-    lta.py                  - Log-Time AUC (LTA) computation
+    yield_score.py          - Log-Time Yield score computation
     analyse_difficulty.py   - Per-task difficulty signal computation
     analyse_envelope.py     - Performance envelope analysis
     metrics.py              - Error classification and summary metrics

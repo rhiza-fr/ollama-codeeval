@@ -82,7 +82,7 @@ def _build_run_table(rewrite_data: list[dict]) -> str:
     for d in sorted_runs:
         rewriter = _extract_rewriter(d.get("dataset", "")) or "?"
         passed_pct = _pass_rate(d)
-        lta = d.get("lta", 0) * 100
+        yield_score = d.get("yield", 0) * 100
         cum = d["cum_pass_per_iteration"]
         pass1 = cum[0] if len(cum) > 0 else 0
         pass5 = cum[4] if len(cum) > 4 else 0
@@ -91,7 +91,7 @@ def _build_run_table(rewrite_data: list[dict]) -> str:
       <td>{html.escape(rewriter)}</td>
       <td data-sort-value="{passed_pct:.2f}">{d["passed_tests"]} ({passed_pct:.1f}%)</td>
       <td data-sort-value="{d["average_time_per_iteration"]:.3f}">{d["average_time_per_iteration"]:.3f}</td>
-      <td data-sort-value="{lta:.2f}">{lta:.1f}%</td>
+      <td data-sort-value="{yield_score:.2f}">{yield_score:.1f}%</td>
       <td data-sort-value="{pass1:.2f}">{pass1:.2f}%</td>
       <td data-sort-value="{pass5:.2f}">{pass5:.2f}%</td>
     </tr>""")
@@ -115,7 +115,7 @@ def generate_rewrite_html(all_data: list) -> None:
         rewriter = _extract_rewriter(d.get("dataset", ""))
         if rewriter:
             rewrite[(d["model"], rewriter)] = d
-            d["lta"] = compute_yield(d["tasks"])
+            d["yield"] = compute_yield(d["tasks"])
 
     if not rewrite:
         return

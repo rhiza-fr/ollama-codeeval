@@ -172,7 +172,7 @@ def generate_cascade_html(all_data: list) -> None:
             f'<td data-sort-value="{d["passed_tests"]}">{d["passed_tests"]}/{d["total_tests"]} ({pct:.1f}%)</td>'
             f'<td data-sort-value="{d["_median_time_per_iter"]:.3f}">{d["_median_time_per_iter"]:.3f}</td>'
             f'<td data-sort-value="{d.get("success_per_minute", 0):.3f}">{d.get("success_per_minute", 0):.3f}</td>'
-            f'<td data-sort-value="{d.get("lta", 0):.4f}">{d.get("lta", 0) * 100:.1f}%</td>'
+            f'<td data-sort-value="{d.get("yield", 0):.4f}">{d.get("yield", 0) * 100:.1f}%</td>'
             f"</tr>\n"
         )
 

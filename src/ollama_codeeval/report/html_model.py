@@ -444,7 +444,7 @@ def generate_individual_html(jsonl_file, summary_data, no_cache=False, distribut
         """
 
     pass_pct = summary_data["passed_tests"] / summary_data["total_tests"] * 100
-    lta = compute_yield(tasks)
+    yield_score = compute_yield(tasks)
     avg_time = summary_data["average_time_per_iteration"]
     spm = summary_data.get("success_per_minute", 0)
 
@@ -474,8 +474,8 @@ def generate_individual_html(jsonl_file, summary_data, no_cache=False, distribut
   </div>
   <div class="stat-card accent-green">
     <div class="stat-label">Yield Score T=10</div>
-    <div class="stat-value">{lta * 100:.1f}%</div>
-    {_chart("yield", lta * 100, "#16a34a")}
+    <div class="stat-value">{yield_score * 100:.1f}%</div>
+    {_chart("yield", yield_score * 100, "#16a34a")}
   </div>
 </div>"""
 

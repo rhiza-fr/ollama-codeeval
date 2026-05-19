@@ -27,10 +27,10 @@ function toggleSecondary() {
 
 
 
-def _compute_all_lta(all_data: list) -> None:
-    """Compute LTA for each model in-place."""
+def _compute_all_yield(all_data: list) -> None:
+    """Compute yield score for each model in-place."""
     for d in all_data:
-        d["lta"] = compute_yield(d["tasks"])
+        d["yield"] = compute_yield(d["tasks"])
 
 
 def _model_label(data):
@@ -123,8 +123,8 @@ def _build_stat_cards(all_data):
     best_spm_model = next(_display_name(d) for d in base if d.get("success_per_minute", 0) == best_spm)
     fastest = min(d["average_time_per_iteration"] for d in base)
     fastest_model = next(_display_name(d) for d in base if d["average_time_per_iteration"] == fastest)
-    best_lta = max(d.get("lta", 0) for d in base)
-    best_lta_model = next(_display_name(d) for d in base if d.get("lta", 0) == best_lta)
+    best_yield = max(d.get("yield", 0) for d in base)
+    best_yield_model = next(_display_name(d) for d in base if d.get("yield", 0) == best_yield)
     return f"""<div class="stat-cards">
   <div class="stat-card accent-blue">
     <div class="stat-label">Best Pass Rate</div>
@@ -143,8 +143,8 @@ def _build_stat_cards(all_data):
   </div>
   <div class="stat-card accent-green">
     <div class="stat-label">Best Yield Score τ={CANONICAL_TAU:g}</div>
-    <div class="stat-value">{best_lta * 100:.1f}%</div>
-    <div class="stat-sub">{html.escape(best_lta_model)}</div>
+    <div class="stat-value">{best_yield * 100:.1f}%</div>
+    <div class="stat-sub">{html.escape(best_yield_model)}</div>
   </div>
 </div>"""
 
@@ -169,7 +169,7 @@ def _compute_distributions(all_data: list) -> dict:
     pr_x, pr_y = kde_xy([d["passed_tests"] / d["total_tests"] * 100 for d in models])
     at_x, at_y = kde_xy([d["average_time_per_iteration"] for d in models])
     sp_x, sp_y = kde_xy([d.get("success_per_minute", 0) for d in models])
-    yl_x, yl_y = kde_xy([d.get("lta", 0) * 100 for d in models])
+    yl_x, yl_y = kde_xy([d.get("yield", 0) * 100 for d in models])
     return {
         "pass_rate":    make(pr_x, pr_y),
         "avg_time":     make(at_x, at_y),
@@ -179,7 +179,7 @@ def _compute_distributions(all_data: list) -> dict:
 
 
 def generate_index_html(all_data, no_cache=False):
-    _compute_all_lta(all_data)
+    _compute_all_yield(all_data)
     distributions = _compute_distributions(all_data)
     from ollama_codeeval.report.html_model import generate_individual_html
     for d in all_data:
@@ -264,7 +264,7 @@ The tasks are simple: complete the functions so that the generated code passes a
             <td data-sort-value="{summary["average_time_per_iteration"]:.3f}">{summary["average_time_per_iteration"]:.3f}</td>
             <td class="col-secondary" data-sort-value="{summary.get("success_per_1k_tokens", 0):.3f}">{summary.get("success_per_1k_tokens", 0):.3f}</td>
             <td class="col-secondary" data-sort-value="{summary.get("success_per_minute", 0):.3f}">{summary.get("success_per_minute", 0):.3f}</td>
-            <td data-sort-value="{summary.get("lta", 0):.4f}">{summary.get("lta", 0) * 100:.1f}%</td>
+            <td data-sort-value="{summary.get("yield", 0):.4f}">{summary.get("yield", 0) * 100:.1f}%</td>
             {percentages}
             </tr>
             """)
