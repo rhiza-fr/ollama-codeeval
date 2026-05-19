@@ -353,7 +353,7 @@ def _vendored_section() -> str:
 def generate_setup_html() -> None:
     """Write the setup page to output/html/setup.html."""
     profile = _load_system_profile()
-    model_stats = _load_model_stats()
+    # model_stats = _load_model_stats()
 
     # Machine details section
     machine_html = ""
