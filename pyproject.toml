@@ -22,10 +22,10 @@ classifiers = [
 
 dependencies = [
     "llm-sandbox[docker]>=0.3.16",
+    "diskcache>=5.6.3",
     "matplotlib>=3.10.6",
     "numpy>=2.3.1",
     "ollama-think>=0.1.9",
-    "pandas>=2.3.1",
     "plotly>=6.3.0",
     "rich>=14.3.2",
     "scipy>=1.16.2",
