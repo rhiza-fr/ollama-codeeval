@@ -59,7 +59,7 @@ docker build -t python-sandbox -f Dockerfile .
 ollama-codeeval eval qwen3:4b
 
 # Evaluate multiple models
-ollama-codeeval eval "qwen3:4b,llama3.1:8b,codellama:13b"
+ollama-codeeval eval "qwen3:4b,gemma4:26b"
 
 # With thinking mode enabled
 ollama-codeeval eval qwen3:4b --think
@@ -166,9 +166,6 @@ Three rewrite datasets are included in `data/`:
 ```bash
 # Rewrite prompts using any Ollama model
 uv run python scripts/generate_rewrites.py --model qwen3:14b
-
-# With thinking mode (for reasoning models)
-uv run python scripts/generate_rewrites.py --model qwen3:14b --think
 ```
 
 This writes `data/humaneval-rewritten-qwen3-14b.jsonl.gz` and caches each rewrite in `diskcache`, so interrupted runs resume from where they left off.
