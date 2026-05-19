@@ -1,4 +1,5 @@
 """Tests for the Sandbox class."""
+
 from unittest.mock import MagicMock, patch
 
 import pytest

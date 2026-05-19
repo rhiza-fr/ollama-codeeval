@@ -3,7 +3,11 @@
 import json
 import logging
 
-from ollama_codeeval.report._shared import load_model_stats, resolve_model_name, tag_display_name
+from ollama_codeeval.report._shared import (
+    load_model_stats,
+    resolve_model_name,
+    tag_display_name,
+)
 
 log = logging.getLogger(__name__)
 
@@ -40,6 +44,7 @@ def _chart_quality_at_speed(all_data: list[dict]) -> str:
     Base models shown as circles/diamonds with labels.
     Rewrite variants shown as smaller triangles, connected to their base by lines.
     """
+
     def _pct(d: dict) -> float:
         return round(d["passed_tests"] / d["total_tests"] * 100, 1)
 
@@ -56,43 +61,55 @@ def _chart_quality_at_speed(all_data: list[dict]) -> str:
 
     # Base model traces (with labels)
     traces = []
+
     def _hover(d: dict) -> str:
         return f"{_model_label(d)}<br>{_pct(d)}%<br>{_time(d)}s"
 
-    for think_val, symbol, name in [(False, "circle", "Standard"), (True, "diamond", "Think")]:
-        subset = [d for d in base_by_key.values() if d["think"] == think_val and not _is_cascade(d)]
+    for think_val, symbol, name in [
+        (False, "circle", "Standard"),
+        (True, "diamond", "Think"),
+    ]:
+        subset = [
+            d
+            for d in base_by_key.values()
+            if d["think"] == think_val and not _is_cascade(d)
+        ]
         if not subset:
             continue
-        traces.append({
-            "type": "scatter",
-            "mode": "markers+text",
-            "x": [_pct(d) for d in subset],
-            "y": [_time(d) for d in subset],
-            "text": [_model_label(d) for d in subset],
-            "hovertext": [_hover(d) for d in subset],
-            "hoverinfo": "text",
-            "textposition": "top center",
-            "textfont": {"size": 9},
-            "marker": {"size": 12, "symbol": symbol},
-            "name": name,
-        })
+        traces.append(
+            {
+                "type": "scatter",
+                "mode": "markers+text",
+                "x": [_pct(d) for d in subset],
+                "y": [_time(d) for d in subset],
+                "text": [_model_label(d) for d in subset],
+                "hovertext": [_hover(d) for d in subset],
+                "hoverinfo": "text",
+                "textposition": "top center",
+                "textfont": {"size": 9},
+                "marker": {"size": 12, "symbol": symbol},
+                "name": name,
+            }
+        )
 
     # Champion trace
     champions = [d for d in base_by_key.values() if _is_cascade(d)]
     if champions:
-        traces.append({
-            "type": "scatter",
-            "mode": "markers+text",
-            "x": [_pct(d) for d in champions],
-            "y": [_time(d) for d in champions],
-            "text": [_model_label(d) for d in champions],
-            "hovertext": [_hover(d) for d in champions],
-            "hoverinfo": "text",
-            "textposition": "top center",
-            "textfont": {"size": 10, "color": "#e67e22"},
-            "marker": {"size": 16, "symbol": "star", "color": "#e67e22"},
-            "name": _model_label(champions[0]),
-        })
+        traces.append(
+            {
+                "type": "scatter",
+                "mode": "markers+text",
+                "x": [_pct(d) for d in champions],
+                "y": [_time(d) for d in champions],
+                "text": [_model_label(d) for d in champions],
+                "hovertext": [_hover(d) for d in champions],
+                "hoverinfo": "text",
+                "textposition": "top center",
+                "textfont": {"size": 10, "color": "#e67e22"},
+                "marker": {"size": 16, "symbol": "star", "color": "#e67e22"},
+                "name": _model_label(champions[0]),
+            }
+        )
 
     layout = {
         "xaxis": {"title": "Pass rate (%)"},
@@ -122,7 +139,10 @@ def _cum_avg_wall_time(d: dict) -> list[float | None]:
         for task in d["tasks"]:
             task_iters = task.get("iterations", [])
             if len(task_iters) >= i + 1:
-                cum = sum(it.get("total_duration", 0) or 0 for it in task_iters[:i + 1]) / 1e9
+                cum = (
+                    sum(it.get("total_duration", 0) or 0 for it in task_iters[: i + 1])
+                    / 1e9
+                )
                 times.append(cum)
         result.append(round(sum(times) / len(times), 2) if times else None)
     return result
@@ -163,72 +183,86 @@ def _chart_quality_at_speed_iterations(all_data: list[dict]) -> str:
         return 0
 
     n_iters = max(len(d["cum_pass_per_iteration"]) for d in base)
-    traces = [{
-        "type": "scatter",
-        "mode": "lines",
-        "x": line_x,
-        "y": line_y,
-        "line": {"color": "#bdc3c7", "width": 1.5},
-        "showlegend": False,
-        "hoverinfo": "skip",
-    }]
+    traces = [
+        {
+            "type": "scatter",
+            "mode": "lines",
+            "x": line_x,
+            "y": line_y,
+            "line": {"color": "#bdc3c7", "width": 1.5},
+            "showlegend": False,
+            "hoverinfo": "skip",
+        }
+    ]
     for i in range(n_iters):
         color = _ITER_COLORS[min(i, len(_ITER_COLORS) - 1)]
         subset = [d for d in base if wall_times[id(d)][i] is not None]
         if not subset:
             continue
-        traces.append({
-            "type": "scatter",
-            "mode": "markers",
-            "x": [round(d["cum_pass_per_iteration"][i], 1) for d in subset],
-            "y": [wall_times[id(d)][i] for d in subset],
-            "hovertext": [
-                f"{_model_label(d)}<br>{round(d['cum_pass_per_iteration'][i], 1)}%<br>{wall_times[id(d)][i]}s"
-                for d in subset
-            ],
-            "hoverinfo": "text",
-            "name": f"After {i + 1} attempt{'s' if i > 0 else ''}",
-            "marker": {"size": 8, "color": color, "symbol": "circle"},
-        })
+        traces.append(
+            {
+                "type": "scatter",
+                "mode": "markers",
+                "x": [round(d["cum_pass_per_iteration"][i], 1) for d in subset],
+                "y": [wall_times[id(d)][i] for d in subset],
+                "hovertext": [
+                    f"{_model_label(d)}<br>{round(d['cum_pass_per_iteration'][i], 1)}%<br>{wall_times[id(d)][i]}s"
+                    for d in subset
+                ],
+                "hoverinfo": "text",
+                "name": f"After {i + 1} attempt{'s' if i > 0 else ''}",
+                "marker": {"size": 8, "color": color, "symbol": "circle"},
+            }
+        )
 
     # Green diamond at each model's final valid iteration (non-champions)
     non_champs = [d for d in base if not _is_cascade(d)]
-    traces.append({
-        "type": "scatter",
-        "mode": "markers+text",
-        "x": [round(d["cum_pass_per_iteration"][_last_valid(d)], 1) for d in non_champs],
-        "y": [wall_times[id(d)][_last_valid(d)] for d in non_champs],
-        "text": [_model_label(d) for d in non_champs],
-        "hovertext": [
-            f"{_model_label(d)}<br>{round(d['cum_pass_per_iteration'][_last_valid(d)], 1)}%<br>{wall_times[id(d)][_last_valid(d)]}s"
-            for d in non_champs
-        ],
-        "hoverinfo": "text",
-        "textposition": "top center",
-        "textfont": {"size": 9},
-        "name": "Final attempt",
-        "marker": {"size": 12, "color": "#2ecc71", "symbol": "diamond"},
-    })
+    traces.append(
+        {
+            "type": "scatter",
+            "mode": "markers+text",
+            "x": [
+                round(d["cum_pass_per_iteration"][_last_valid(d)], 1)
+                for d in non_champs
+            ],
+            "y": [wall_times[id(d)][_last_valid(d)] for d in non_champs],
+            "text": [_model_label(d) for d in non_champs],
+            "hovertext": [
+                f"{_model_label(d)}<br>{round(d['cum_pass_per_iteration'][_last_valid(d)], 1)}%<br>{wall_times[id(d)][_last_valid(d)]}s"
+                for d in non_champs
+            ],
+            "hoverinfo": "text",
+            "textposition": "top center",
+            "textfont": {"size": 9},
+            "name": "Final attempt",
+            "marker": {"size": 12, "color": "#2ecc71", "symbol": "diamond"},
+        }
+    )
 
     # Champion trace — orange star
     champs = [d for d in base if _is_cascade(d)]
     if champs:
-        traces.append({
-            "type": "scatter",
-            "mode": "markers+text",
-            "x": [round(d["cum_pass_per_iteration"][_last_valid(d)], 1) for d in champs],
-            "y": [wall_times[id(d)][_last_valid(d)] for d in champs],
-            "text": [_model_label(d) for d in champs],
-            "hovertext": [
-                f"{_model_label(d)}<br>{round(d['cum_pass_per_iteration'][_last_valid(d)], 1)}%<br>{wall_times[id(d)][_last_valid(d)]}s"
-                for d in champs
-            ],
-            "hoverinfo": "text",
-            "textposition": "top center",
-            "textfont": {"size": 10, "color": "#e67e22"},
-            "name": _model_label(champs[0]),
-            "marker": {"size": 16, "symbol": "star", "color": "#e67e22"},
-        })
+        traces.append(
+            {
+                "type": "scatter",
+                "mode": "markers+text",
+                "x": [
+                    round(d["cum_pass_per_iteration"][_last_valid(d)], 1)
+                    for d in champs
+                ],
+                "y": [wall_times[id(d)][_last_valid(d)] for d in champs],
+                "text": [_model_label(d) for d in champs],
+                "hovertext": [
+                    f"{_model_label(d)}<br>{round(d['cum_pass_per_iteration'][_last_valid(d)], 1)}%<br>{wall_times[id(d)][_last_valid(d)]}s"
+                    for d in champs
+                ],
+                "hoverinfo": "text",
+                "textposition": "top center",
+                "textfont": {"size": 10, "color": "#e67e22"},
+                "name": _model_label(champs[0]),
+                "marker": {"size": 16, "symbol": "star", "color": "#e67e22"},
+            }
+        )
 
     layout = {
         "xaxis": {"title": "Pass rate (%)"},
@@ -257,7 +291,14 @@ def _chart_iteration_lift(all_data: list[dict]) -> str:
     # Per-iteration x values (None if a model has fewer iterations)
     iter_x: list[list[float | None]] = []
     for i in range(n_iters):
-        iter_x.append([round(d["cum_pass_per_iteration"][i], 1) if i < len(d["cum_pass_per_iteration"]) else None for d in base])
+        iter_x.append(
+            [
+                round(d["cum_pass_per_iteration"][i], 1)
+                if i < len(d["cum_pass_per_iteration"])
+                else None
+                for d in base
+            ]
+        )
 
     # Connecting lines from iter-1 to final for each model
     shapes = []
@@ -265,33 +306,43 @@ def _chart_iteration_lift(all_data: list[dict]) -> str:
         x0 = iter_x[0][j]
         x1 = iter_x[-1][j]
         if x0 is not None and x1 is not None:
-            shapes.append({
-                "type": "line",
-                "x0": x0, "x1": x1,
-                "y0": label, "y1": label,
-                "yref": "y",
-                "line": {"color": "#bdc3c7", "width": 2},
-            })
+            shapes.append(
+                {
+                    "type": "line",
+                    "x0": x0,
+                    "x1": x1,
+                    "y0": label,
+                    "y1": label,
+                    "yref": "y",
+                    "line": {"color": "#bdc3c7", "width": 2},
+                }
+            )
 
     champion_mask = [_is_cascade(d) for d in base]
-    _cascade_trace_name = next((_model_label(d) for d in base if _is_cascade(d)), "★ Cascade")
+    _cascade_trace_name = next(
+        (_model_label(d) for d in base if _is_cascade(d)), "★ Cascade"
+    )
 
     traces = []
     for i in range(n_iters):
         is_final = i == n_iters - 1
         color = _ITER_COLORS[min(i, len(_ITER_COLORS) - 1)]
-        traces.append({
-            "type": "scatter",
-            "mode": "markers",
-            "x": [x if not champion_mask[j] else None for j, x in enumerate(iter_x[i])],
-            "y": labels,
-            "name": f"After {i + 1} attempt{'s' if i > 0 else ''}",
-            "marker": {
-                "size": 12 if is_final else 8,
-                "color": "#2ecc71" if is_final else color,
-                "symbol": "diamond" if is_final else "circle",
-            },
-        })
+        traces.append(
+            {
+                "type": "scatter",
+                "mode": "markers",
+                "x": [
+                    x if not champion_mask[j] else None for j, x in enumerate(iter_x[i])
+                ],
+                "y": labels,
+                "name": f"After {i + 1} attempt{'s' if i > 0 else ''}",
+                "marker": {
+                    "size": 12 if is_final else 8,
+                    "color": "#2ecc71" if is_final else color,
+                    "symbol": "diamond" if is_final else "circle",
+                },
+            }
+        )
 
     # Champion overlay: gold star at each iteration
     for i in range(n_iters):
@@ -299,15 +350,21 @@ def _chart_iteration_lift(all_data: list[dict]) -> str:
         cx = [iter_x[i][j] for j, m in enumerate(champion_mask) if m]
         cy = [labels[j] for j, m in enumerate(champion_mask) if m]
         if cx:
-            traces.append({
-                "type": "scatter",
-                "mode": "markers",
-                "x": cx,
-                "y": cy,
-                "showlegend": is_final,
-                "name": _cascade_trace_name,
-                "marker": {"size": 16 if is_final else 12, "color": "#e67e22", "symbol": "star"},
-            })
+            traces.append(
+                {
+                    "type": "scatter",
+                    "mode": "markers",
+                    "x": cx,
+                    "y": cy,
+                    "showlegend": is_final,
+                    "name": _cascade_trace_name,
+                    "marker": {
+                        "size": 16 if is_final else 12,
+                        "color": "#e67e22",
+                        "symbol": "star",
+                    },
+                }
+            )
 
     layout = {
         "xaxis": {"title": "Pass rate (%)", "range": [0, 105]},
@@ -364,24 +421,33 @@ def _chart_rewrite_lift(all_data: list[dict]) -> str:
     shapes = []
     for key, label in zip(keys, labels):
         base_pct = base_by_key[key]["cum_pass_per_iteration"][0]
-        best_pct = max(rw["passed_tests"] / rw["total_tests"] for rw in rewrites_by_key[key]) * 100
-        shapes.append({
-            "type": "line",
-            "x0": round(base_pct, 1), "x1": round(best_pct, 1),
-            "y0": label, "y1": label,
-            "yref": "y",
-            "line": {"color": "#bdc3c7", "width": 2},
-        })
+        best_pct = (
+            max(rw["passed_tests"] / rw["total_tests"] for rw in rewrites_by_key[key])
+            * 100
+        )
+        shapes.append(
+            {
+                "type": "line",
+                "x0": round(base_pct, 1),
+                "x1": round(best_pct, 1),
+                "y0": label,
+                "y1": label,
+                "yref": "y",
+                "line": {"color": "#bdc3c7", "width": 2},
+            }
+        )
 
     # Base trace (no rewrite)
-    traces = [{
-        "type": "scatter",
-        "mode": "markers",
-        "x": [round(base_by_key[k]["cum_pass_per_iteration"][0], 1) for k in keys],
-        "y": labels,
-        "name": "No rewrite",
-        "marker": {"size": 10, "color": "#95a5a6"},
-    }]
+    traces = [
+        {
+            "type": "scatter",
+            "mode": "markers",
+            "x": [round(base_by_key[k]["cum_pass_per_iteration"][0], 1) for k in keys],
+            "y": labels,
+            "name": "No rewrite",
+            "marker": {"size": 10, "color": "#95a5a6"},
+        }
+    ]
 
     # One trace per rewrite model
     for idx, rm in enumerate(rewrite_models_seen):
@@ -391,17 +457,21 @@ def _chart_rewrite_lift(all_data: list[dict]) -> str:
         for key, label in zip(keys, labels):
             for rw in rewrites_by_key.get(key, []):
                 if rw.get("dataset", "humaneval") == rm:
-                    x_vals.append(round(rw["passed_tests"] / rw["total_tests"] * 100, 1))
+                    x_vals.append(
+                        round(rw["passed_tests"] / rw["total_tests"] * 100, 1)
+                    )
                     y_vals.append(label)
         if x_vals:
-            traces.append({
-                "type": "scatter",
-                "mode": "markers",
-                "x": x_vals,
-                "y": y_vals,
-                "name": f"Rewrite: {rm}",
-                "marker": {"size": 10, **style},
-            })
+            traces.append(
+                {
+                    "type": "scatter",
+                    "mode": "markers",
+                    "x": x_vals,
+                    "y": y_vals,
+                    "name": f"Rewrite: {rm}",
+                    "marker": {"size": 10, **style},
+                }
+            )
 
     layout = {
         "xaxis": {"title": "Pass rate (%)", "range": [0, 105]},
@@ -456,13 +526,17 @@ def chart_combined_progression(all_data: list[dict]) -> str:
         all_x = [iter1[i], final[i]]
         for rm_data in rewrites_by_key.get(key, {}).values():
             all_x.append(_pct(rm_data))
-        shapes.append({
-            "type": "line",
-            "x0": min(all_x), "x1": max(all_x),
-            "y0": labels[i], "y1": labels[i],
-            "yref": "y",
-            "line": {"color": "#bdc3c7", "width": 2},
-        })
+        shapes.append(
+            {
+                "type": "line",
+                "x0": min(all_x),
+                "x1": max(all_x),
+                "y0": labels[i],
+                "y1": labels[i],
+                "yref": "y",
+                "line": {"color": "#bdc3c7", "width": 2},
+            }
+        )
 
     traces = [
         {
@@ -493,14 +567,16 @@ def chart_combined_progression(all_data: list[dict]) -> str:
                 x_vals.append(_pct(rw_data))
                 y_vals.append(label)
         if x_vals:
-            traces.append({
-                "type": "scatter",
-                "mode": "markers",
-                "x": x_vals,
-                "y": y_vals,
-                "name": f"Rewrite: {rm}",
-                "marker": {"size": 10, **style},
-            })
+            traces.append(
+                {
+                    "type": "scatter",
+                    "mode": "markers",
+                    "x": x_vals,
+                    "y": y_vals,
+                    "name": f"Rewrite: {rm}",
+                    "marker": {"size": 10, **style},
+                }
+            )
 
     layout = {
         "xaxis": {"title": "Pass rate (%)", "range": [0, 105]},
@@ -561,15 +637,17 @@ def _chart_size_vs_pass_rate(all_data: list[dict]) -> str:
             continue
         param_count = ms["parameter_count"]
         pct = round(d["passed_tests"] / d["total_tests"] * 100, 1)
-        by_size[param_count].append({
-            "label": _model_label(d),
-            "pct": pct,
-            "think": d["think"],
-            "cascade": _is_cascade(d),
-            "param_count": param_count,
-            "param_size": ms.get("parameter_size", ""),
-            "quantization": ms.get("quantization_level", ""),
-        })
+        by_size[param_count].append(
+            {
+                "label": _model_label(d),
+                "pct": pct,
+                "think": d["think"],
+                "cascade": _is_cascade(d),
+                "param_count": param_count,
+                "param_size": ms.get("parameter_size", ""),
+                "quantization": ms.get("quantization_level", ""),
+            }
+        )
 
     if skipped:
         log.info("Size chart: skipped models without stats: %s", set(skipped))
@@ -602,47 +680,53 @@ def _chart_size_vs_pass_rate(all_data: list[dict]) -> str:
 
     traces = []
     if standard_x:
-        traces.append({
-            "type": "scatter",
-            "mode": "markers+text",
-            "x": standard_x,
-            "y": standard_y,
-            "text": standard_label,
-            "hovertext": standard_text,
-            "hoverinfo": "text",
-            "textposition": "top center",
-            "textfont": {"size": 9},
-            "name": "Standard",
-            "marker": {"size": 10, "color": "#3498db"},
-        })
+        traces.append(
+            {
+                "type": "scatter",
+                "mode": "markers+text",
+                "x": standard_x,
+                "y": standard_y,
+                "text": standard_label,
+                "hovertext": standard_text,
+                "hoverinfo": "text",
+                "textposition": "top center",
+                "textfont": {"size": 9},
+                "name": "Standard",
+                "marker": {"size": 10, "color": "#3498db"},
+            }
+        )
     if think_x:
-        traces.append({
-            "type": "scatter",
-            "mode": "markers+text",
-            "x": think_x,
-            "y": think_y,
-            "text": think_label,
-            "hovertext": think_text,
-            "hoverinfo": "text",
-            "textposition": "top center",
-            "textfont": {"size": 9},
-            "name": "Think",
-            "marker": {"size": 10, "color": "#e74c3c", "symbol": "diamond"},
-        })
+        traces.append(
+            {
+                "type": "scatter",
+                "mode": "markers+text",
+                "x": think_x,
+                "y": think_y,
+                "text": think_label,
+                "hovertext": think_text,
+                "hoverinfo": "text",
+                "textposition": "top center",
+                "textfont": {"size": 9},
+                "name": "Think",
+                "marker": {"size": 10, "color": "#e74c3c", "symbol": "diamond"},
+            }
+        )
     if champion_x:
-        traces.append({
-            "type": "scatter",
-            "mode": "markers+text",
-            "x": champion_x,
-            "y": champion_y,
-            "text": champion_label,
-            "hovertext": champion_text,
-            "hoverinfo": "text",
-            "textposition": "top center",
-            "textfont": {"size": 10, "color": "#e67e22"},
-            "name": champion_label[0],
-            "marker": {"size": 16, "color": "#e67e22", "symbol": "star"},
-        })
+        traces.append(
+            {
+                "type": "scatter",
+                "mode": "markers+text",
+                "x": champion_x,
+                "y": champion_y,
+                "text": champion_label,
+                "hovertext": champion_text,
+                "hoverinfo": "text",
+                "textposition": "top center",
+                "textfont": {"size": 10, "color": "#e67e22"},
+                "name": champion_label[0],
+                "marker": {"size": 16, "color": "#e67e22", "symbol": "star"},
+            }
+        )
 
     layout = {
         "xaxis": {"title": "Pass rate (%)", "range": [0, 105]},
@@ -675,10 +759,13 @@ def _load_vram_bench() -> dict[str, int] | None:
             latest_path = path
 
     if latest_path is None:
-        log.warning("No vram_bench_*.json files found — skipping VRAM vs pass rate chart")
+        log.warning(
+            "No vram_bench_*.json files found — skipping VRAM vs pass rate chart"
+        )
         return None
 
     from collections import defaultdict
+
     data = json.loads(latest_path.read_text())
     log.info("Loaded VRAM bench data from %s", latest_path.name)
 
@@ -719,13 +806,15 @@ def _chart_vram_vs_pass_rate(all_data: list[dict]) -> str:
             continue
         vram_gb = round(vram_mb / 1024, 1)
         pct = round(d["passed_tests"] / d["total_tests"] * 100, 1)
-        by_vram[vram_gb].append({
-            "label": _model_label(d),
-            "pct": pct,
-            "think": d["think"],
-            "cascade": _is_cascade(d),
-            "vram_gb": vram_gb,
-        })
+        by_vram[vram_gb].append(
+            {
+                "label": _model_label(d),
+                "pct": pct,
+                "think": d["think"],
+                "cascade": _is_cascade(d),
+                "vram_gb": vram_gb,
+            }
+        )
 
     if skipped:
         log.info("VRAM chart: skipped models without VRAM data: %s", set(skipped))
@@ -759,47 +848,53 @@ def _chart_vram_vs_pass_rate(all_data: list[dict]) -> str:
 
     traces = []
     if standard_x:
-        traces.append({
-            "type": "scatter",
-            "mode": "markers+text",
-            "x": standard_x,
-            "y": standard_y,
-            "text": standard_label,
-            "hovertext": standard_text,
-            "hoverinfo": "text",
-            "textposition": "top center",
-            "textfont": {"size": 9},
-            "name": "Standard",
-            "marker": {"size": 10, "color": "#3498db"},
-        })
+        traces.append(
+            {
+                "type": "scatter",
+                "mode": "markers+text",
+                "x": standard_x,
+                "y": standard_y,
+                "text": standard_label,
+                "hovertext": standard_text,
+                "hoverinfo": "text",
+                "textposition": "top center",
+                "textfont": {"size": 9},
+                "name": "Standard",
+                "marker": {"size": 10, "color": "#3498db"},
+            }
+        )
     if think_x:
-        traces.append({
-            "type": "scatter",
-            "mode": "markers+text",
-            "x": think_x,
-            "y": think_y,
-            "text": think_label,
-            "hovertext": think_text,
-            "hoverinfo": "text",
-            "textposition": "top center",
-            "textfont": {"size": 9},
-            "name": "Think",
-            "marker": {"size": 10, "color": "#e74c3c", "symbol": "diamond"},
-        })
+        traces.append(
+            {
+                "type": "scatter",
+                "mode": "markers+text",
+                "x": think_x,
+                "y": think_y,
+                "text": think_label,
+                "hovertext": think_text,
+                "hoverinfo": "text",
+                "textposition": "top center",
+                "textfont": {"size": 9},
+                "name": "Think",
+                "marker": {"size": 10, "color": "#e74c3c", "symbol": "diamond"},
+            }
+        )
     if champion_x:
-        traces.append({
-            "type": "scatter",
-            "mode": "markers+text",
-            "x": champion_x,
-            "y": champion_y,
-            "text": champion_label,
-            "hovertext": champion_text,
-            "hoverinfo": "text",
-            "textposition": "top center",
-            "textfont": {"size": 10, "color": "#e67e22"},
-            "name": champion_label[0],
-            "marker": {"size": 16, "color": "#e67e22", "symbol": "star"},
-        })
+        traces.append(
+            {
+                "type": "scatter",
+                "mode": "markers+text",
+                "x": champion_x,
+                "y": champion_y,
+                "text": champion_label,
+                "hovertext": champion_text,
+                "hoverinfo": "text",
+                "textposition": "top center",
+                "textfont": {"size": 10, "color": "#e67e22"},
+                "name": champion_label[0],
+                "marker": {"size": 16, "color": "#e67e22", "symbol": "star"},
+            }
+        )
 
     layout = {
         "xaxis": {"title": "Pass rate (%)", "range": [0, 105]},
@@ -814,7 +909,9 @@ def _chart_vram_vs_pass_rate(all_data: list[dict]) -> str:
     )
 
 
-def _cascade_vram_total(d: dict, vram_data: dict[str, int], stats: dict | None) -> int | None:
+def _cascade_vram_total(
+    d: dict, vram_data: dict[str, int], stats: dict | None
+) -> int | None:
     """Sum VRAM across all unique models used in a cascade run."""
     seen: dict[str, None] = {}
     for task in d.get("tasks", []):
@@ -833,7 +930,9 @@ def _cascade_vram_total(d: dict, vram_data: dict[str, int], stats: dict | None) 
     return total
 
 
-def _resolve_vram(model_name: str, vram_data: dict[str, int], stats: dict | None) -> int | None:
+def _resolve_vram(
+    model_name: str, vram_data: dict[str, int], stats: dict | None
+) -> int | None:
     """Find VRAM size for a model, using the same resolution logic as _resolve_model_stats.
 
     Handles raw Ollama names, :latest suffixes, and display-name resolution
@@ -865,13 +964,17 @@ def generate_charts_html(all_data: list[dict]) -> str:
     sections = []
 
     sections.append("<h2>Pass Rate @5 vs Time</h2>")
-    sections.append("<p>This shows log-time. Scores low and to the right are better. The <a href=\"cascade.html\">cascade</a> is a special run switching between three models.</p>")
+    sections.append(
+        '<p>This shows log-time. Scores low and to the right are better. The <a href="cascade.html">cascade</a> is a special run switching between three models.</p>'
+    )
     sections.append(_chart_quality_at_speed(filtered))
 
     iter_speed_html = _chart_quality_at_speed_iterations(filtered)
     if iter_speed_html:
         sections.append("<h2>Pass Rate vs Time — by Iteration</h2>")
-        sections.append("<p>Iteration improves score at the cost of time. This shows log-time. Scores low and to the right are better. If a model moves up but not to the right it indicates that iterations are not improving the score</p>")
+        sections.append(
+            "<p>Iteration improves score at the cost of time. This shows log-time. Scores low and to the right are better. If a model moves up but not to the right it indicates that iterations are not improving the score</p>"
+        )
         sections.append(iter_speed_html)
 
     sections.append("<h2>Iteration Improves Results</h2>")
@@ -881,7 +984,9 @@ def generate_charts_html(all_data: list[dict]) -> str:
     vram_html = _chart_vram_vs_pass_rate(filtered)
     if vram_html:
         sections.append("<h2>VRAM Usage vs Pass Rate</h2>")
-        sections.append("<p>Measured Ollama VRAM (GB) vs final pass rate. Thinking increases PassRate@5, at the expense of time.</p>")
+        sections.append(
+            "<p>Measured Ollama VRAM (GB) vs final pass rate. Thinking increases PassRate@5, at the expense of time.</p>"
+        )
         sections.append(vram_html)
 
     return "\n".join(sections)

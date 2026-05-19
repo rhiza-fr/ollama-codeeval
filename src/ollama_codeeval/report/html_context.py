@@ -3,7 +3,13 @@
 import html as _html
 import json
 
-from ollama_codeeval.report._shared import CSS_BLOCK, OUTPUT_DIR, SORT_SCRIPT, _nav_html, sanitize_task_id
+from ollama_codeeval.report._shared import (
+    CSS_BLOCK,
+    OUTPUT_DIR,
+    SORT_SCRIPT,
+    _nav_html,
+    sanitize_task_id,
+)
 
 
 def _extract_context_stats(data: dict) -> dict:
@@ -28,11 +34,13 @@ def _extract_context_stats(data: dict) -> dict:
             done_reason = it.get("done_reason", "stop")
             exit_code = (it.get("test_result") or {}).get("exit_code", -1)
 
-            iter_rows.append({
-                "tokens": tokens,
-                "done_reason": done_reason,
-                "exit_code": exit_code,
-            })
+            iter_rows.append(
+                {
+                    "tokens": tokens,
+                    "done_reason": done_reason,
+                    "exit_code": exit_code,
+                }
+            )
 
             if done_reason == "length":
                 explosions += 1
@@ -42,12 +50,16 @@ def _extract_context_stats(data: dict) -> dict:
             tasks_exploded += 1
             passed = task.get("final_result", {}).get("exit_code") == 0
             if not passed:
-                tasks_stuck += 1  # had explosion AND failed (explosion may not be the cause)
-            task_details.append({
-                "task_id": task["input"]["task_id"],
-                "iter_rows": iter_rows,
-                "passed": passed,
-            })
+                tasks_stuck += (
+                    1  # had explosion AND failed (explosion may not be the cause)
+                )
+            task_details.append(
+                {
+                    "task_id": task["input"]["task_id"],
+                    "iter_rows": iter_rows,
+                    "passed": passed,
+                }
+            )
 
     return {
         "explosions": explosions,
@@ -65,8 +77,8 @@ def _extract_context_stats(data: dict) -> dict:
 def _build_summary_table(entries: list[dict]) -> str:
     """Build a sortable HTML summary table. Each entry must have a '_ctx' key from _extract_context_stats."""
     out = (
-        '<table>\n'
-        '<thead><tr>'
+        "<table>\n"
+        "<thead><tr>"
         '<th class="sortable">Model</th>'
         '<th class="sortable">Total Iters</th>'
         '<th class="sortable">Explosions</th>'
@@ -75,7 +87,7 @@ def _build_summary_table(entries: list[dict]) -> str:
         '<th class="sortable">Avg Tokens</th>'
         '<th class="sortable">Tasks w/ Expl</th>'
         '<th class="sortable">Tasks Stuck</th>'
-        '</tr></thead>\n<tbody>\n'
+        "</tr></thead>\n<tbody>\n"
     )
     sorted_entries = sorted(entries, key=lambda e: -e["_ctx"]["expl_pct"])
     for e in sorted_entries:
@@ -83,10 +95,12 @@ def _build_summary_table(entries: list[dict]) -> str:
         pct = ctx["expl_pct"]
         model_name = _html.escape(_model_label(e))
         html_file = _html.escape(e.get("html_file", ""))
-        model_cell = f'<a href="{html_file}">{model_name}</a>' if html_file else model_name
+        model_cell = (
+            f'<a href="{html_file}">{model_name}</a>' if html_file else model_name
+        )
         out += (
-            f'<tr>'
-            f'<td>{model_cell}</td>'
+            f"<tr>"
+            f"<td>{model_cell}</td>"
             f'<td data-sort-value="{ctx["total_iters"]}">{ctx["total_iters"]}</td>'
             f'<td data-sort-value="{ctx["explosions"]}">{ctx["explosions"]}</td>'
             f'<td data-sort-value="{pct:.2f}">{pct:.1f}%</td>'
@@ -94,9 +108,9 @@ def _build_summary_table(entries: list[dict]) -> str:
             f'<td data-sort-value="{ctx["avg_tokens"]}">{ctx["avg_tokens"]:,.0f}</td>'
             f'<td data-sort-value="{ctx["tasks_exploded"]}">{ctx["tasks_exploded"]}</td>'
             f'<td data-sort-value="{ctx["tasks_stuck"]}">{ctx["tasks_stuck"]}</td>'
-            f'</tr>\n'
+            f"</tr>\n"
         )
-    return out + '</tbody></table>\n'
+    return out + "</tbody></table>\n"
 
 
 def _model_label(entry: dict) -> str:
@@ -122,20 +136,22 @@ def _chart_explosion_rate(entries: list[dict]) -> str:
         for e in sorted_e
     ]
     max_val = max(values) if values else 100
-    traces = [{
-        "type": "bar",
-        "orientation": "h",
-        "x": values,
-        "y": labels,
-        "text": hover,
-        "hoverinfo": "text",
-        "marker": {
-            "color": values,
-            "colorscale": [[0, "#2ecc71"], [0.3, "#f1c40f"], [1, "#e74c3c"]],
-            "cmin": 0,
-            "cmax": max_val,
-        },
-    }]
+    traces = [
+        {
+            "type": "bar",
+            "orientation": "h",
+            "x": values,
+            "y": labels,
+            "text": hover,
+            "hoverinfo": "text",
+            "marker": {
+                "color": values,
+                "colorscale": [[0, "#2ecc71"], [0.3, "#f1c40f"], [1, "#e74c3c"]],
+                "cmin": 0,
+                "cmax": max_val,
+            },
+        }
+    ]
     layout = {
         "xaxis": {"title": "Context explosion rate (%)", "range": [0, max_val * 1.1]},
         "margin": {"l": 220, "b": 60},
@@ -161,27 +177,34 @@ def _chart_token_usage(entries: list[dict]) -> str:
     for e in active_sorted:
         label = _model_label(e)
         totals = e["_ctx"]["token_totals"]
-        traces.append({
-            "type": "scatter",
-            "mode": "markers",
-            "name": label,
-            "x": totals,
-            "y": [label] * len(totals),
-            "marker": {"size": 5, "opacity": 0.5},
-            "showlegend": False,
-        })
+        traces.append(
+            {
+                "type": "scatter",
+                "mode": "markers",
+                "name": label,
+                "x": totals,
+                "y": [label] * len(totals),
+                "marker": {"size": 5, "opacity": 0.5},
+                "showlegend": False,
+            }
+        )
     # Reference line at the autocontext cap
-    traces.append({
-        "type": "scatter",
-        "mode": "lines",
-        "name": "Context cap (16 384)",
-        "x": [16384, 16384],
-        "y": [labels[0], labels[-1]],
-        "line": {"color": "red", "dash": "dash", "width": 1},
-        "showlegend": True,
-    })
+    traces.append(
+        {
+            "type": "scatter",
+            "mode": "lines",
+            "name": "Context cap (16 384)",
+            "x": [16384, 16384],
+            "y": [labels[0], labels[-1]],
+            "line": {"color": "red", "dash": "dash", "width": 1},
+            "showlegend": True,
+        }
+    )
     layout = {
-        "xaxis": {"title": "Tokens per iteration (prompt + completion)", "range": [0, 20000]},
+        "xaxis": {
+            "title": "Tokens per iteration (prompt + completion)",
+            "range": [0, 20000],
+        },
         "margin": {"l": 220, "b": 60},
         "height": max(300, len(labels) * 28 + 80),
         "showlegend": True,
@@ -208,15 +231,27 @@ def _build_detail_table(all_entries: list[dict]) -> str:
         prev_model = model_label
         grp = "group-even" if group_idx % 2 == 0 else "group-odd"
         html_file = _html.escape(entry.get("html_file", ""))
-        model_cell = f'<a href="{html_file}">{_html.escape(model_label)}</a>' if html_file else _html.escape(model_label)
+        model_cell = (
+            f'<a href="{html_file}">{_html.escape(model_label)}</a>'
+            if html_file
+            else _html.escape(model_label)
+        )
 
         for detail in ctx["task_details"]:
             raw_task_id = detail["task_id"]
             task_id = _html.escape(raw_task_id)
-            task_cell = f'<a href="task_{sanitize_task_id(raw_task_id)}.html">{task_id}</a>'
+            task_cell = (
+                f'<a href="task_{sanitize_task_id(raw_task_id)}.html">{task_id}</a>'
+            )
             outcome = "pass" if detail["passed"] else "FAIL"
-            outcome_style = "color:green" if detail["passed"] else "color:red;font-weight:bold"
-            visible_rows = [(i, row) for i, row in enumerate(detail["iter_rows"]) if row["done_reason"] != "stop"]
+            outcome_style = (
+                "color:green" if detail["passed"] else "color:red;font-weight:bold"
+            )
+            visible_rows = [
+                (i, row)
+                for i, row in enumerate(detail["iter_rows"])
+                if row["done_reason"] != "stop"
+            ]
             for j, (i, row) in enumerate(visible_rows):
                 dr = row["done_reason"]
                 dr_style = "color:red;font-weight:bold" if dr == "length" else ""
@@ -224,29 +259,29 @@ def _build_detail_table(all_entries: list[dict]) -> str:
                 cell_style = outcome_style if outcome_text else ""
                 rows += (
                     f'<tr class="{grp}">'
-                    f'<td>{model_cell}</td>'
-                    f'<td>{task_cell}</td>'
-                    f'<td>{i + 1}</td>'
+                    f"<td>{model_cell}</td>"
+                    f"<td>{task_cell}</td>"
+                    f"<td>{i + 1}</td>"
                     f'<td data-sort-value="{row["tokens"]}">{row["tokens"]:,}</td>'
                     f'<td style="{dr_style}">{dr}</td>'
                     f'<td style="{cell_style}">{outcome_text}</td>'
-                    f'</tr>\n'
+                    f"</tr>\n"
                 )
 
     if not rows:
         return "<p>No context explosions detected.</p>"
 
     return (
-        '<table>\n'
-        '<thead><tr>'
+        "<table>\n"
+        "<thead><tr>"
         '<th class="sortable">Model</th>'
         '<th class="sortable">Task</th>'
         '<th class="sortable">Iter</th>'
         '<th class="sortable">Tokens Used</th>'
         '<th class="sortable">done_reason</th>'
-        '<th>Outcome</th>'
-        '</tr></thead>\n'
-        f'<tbody>\n{rows}</tbody></table>\n'
+        "<th>Outcome</th>"
+        "</tr></thead>\n"
+        f"<tbody>\n{rows}</tbody></table>\n"
     )
 
 

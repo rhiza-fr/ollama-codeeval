@@ -1,4 +1,5 @@
 """Tests for html_context._extract_context_stats."""
+
 import pytest
 from ollama_codeeval.report.html_context import (
     _build_summary_table,
@@ -27,6 +28,7 @@ def _make_iter(eval_count, prompt_eval_count, done_reason="stop", exit_code=0):
 
 
 # ── basic counting ────────────────────────────────────────────────────────────
+
 
 def test_no_explosions():
     data = {
@@ -82,13 +84,17 @@ def test_one_explosion_failing_task():
 
 # ── token totals ─────────────────────────────────────────────────────────────
 
+
 def test_token_totals():
     data = {
         "tasks": [
-            _make_task("HumanEval/0", [
-                _make_iter(100, 50),   # total 150
-                _make_iter(200, 100),  # total 300
-            ]),
+            _make_task(
+                "HumanEval/0",
+                [
+                    _make_iter(100, 50),  # total 150
+                    _make_iter(200, 100),  # total 300
+                ],
+            ),
         ]
     }
     stats = _extract_context_stats(data)
@@ -98,12 +104,15 @@ def test_token_totals():
 
 # ── task_details ──────────────────────────────────────────────────────────────
 
+
 def test_task_details_only_for_exploded():
     """task_details contains only tasks that had ≥1 explosion."""
     data = {
         "tasks": [
             _make_task("HumanEval/0", [_make_iter(200, 100, "stop")]),
-            _make_task("HumanEval/1", [_make_iter(16384, 382, "length", 1)], exit_code=1),
+            _make_task(
+                "HumanEval/1", [_make_iter(16384, 382, "length", 1)], exit_code=1
+            ),
         ]
     }
     stats = _extract_context_stats(data)
@@ -119,25 +128,45 @@ def test_task_detail_iteration_sequence():
         _make_iter(6144, 200, "length", 1),
         _make_iter(300, 200, "stop", 0),
     ]
-    data = {
-        "tasks": [_make_task("HumanEval/5", iters, exit_code=0)]
-    }
+    data = {"tasks": [_make_task("HumanEval/5", iters, exit_code=0)]}
     stats = _extract_context_stats(data)
     detail = stats["task_details"][0]
     assert len(detail["iter_rows"]) == 3
-    assert detail["iter_rows"][0] == {"tokens": 4296, "done_reason": "length", "exit_code": 1}
-    assert detail["iter_rows"][1] == {"tokens": 6344, "done_reason": "length", "exit_code": 1}
-    assert detail["iter_rows"][2] == {"tokens": 500,  "done_reason": "stop",   "exit_code": 0}
+    assert detail["iter_rows"][0] == {
+        "tokens": 4296,
+        "done_reason": "length",
+        "exit_code": 1,
+    }
+    assert detail["iter_rows"][1] == {
+        "tokens": 6344,
+        "done_reason": "length",
+        "exit_code": 1,
+    }
+    assert detail["iter_rows"][2] == {
+        "tokens": 500,
+        "done_reason": "stop",
+        "exit_code": 0,
+    }
 
 
 # ── edge cases ────────────────────────────────────────────────────────────────
+
 
 def test_none_eval_counts_treated_as_zero():
     """None eval_count/prompt_eval_count should not crash."""
     data = {
         "tasks": [
-            _make_task("HumanEval/0", [{"eval_count": None, "prompt_eval_count": None,
-                                        "done_reason": "stop", "test_result": {"exit_code": 0}}])
+            _make_task(
+                "HumanEval/0",
+                [
+                    {
+                        "eval_count": None,
+                        "prompt_eval_count": None,
+                        "done_reason": "stop",
+                        "test_result": {"exit_code": 0},
+                    }
+                ],
+            )
         ]
     }
     stats = _extract_context_stats(data)
@@ -153,9 +182,9 @@ def test_empty_tasks():
     assert stats["avg_tokens"] == 0.0
 
 
-
-
-def _make_file_entry(model, think, tag, expl, total_iters, max_tok, avg_tok, exploded, stuck):
+def _make_file_entry(
+    model, think, tag, expl, total_iters, max_tok, avg_tok, exploded, stuck
+):
     """Minimal all_data entry shape for _build_summary_table."""
     return {
         "model": model,
@@ -175,7 +204,9 @@ def _make_file_entry(model, think, tag, expl, total_iters, max_tok, avg_tok, exp
 
 
 def test_summary_table_contains_model_name():
-    entries = [_make_file_entry("deepseek-r1:1.5b", False, None, 50, 100, 16766, 8000, 30, 28)]
+    entries = [
+        _make_file_entry("deepseek-r1:1.5b", False, None, 50, 100, 16766, 8000, 30, 28)
+    ]
     html = _build_summary_table(entries)
     assert "deepseek-r1:1.5b" in html
     assert "50.0%" in html  # expl_pct
@@ -191,7 +222,7 @@ def test_summary_table_zero_explosions_row():
 def test_summary_table_sort_order():
     """Higher expl_pct model should appear before lower."""
     entries = [
-        _make_file_entry("low-expl", False, None, 5, 100, 500, 300, 3, 2),   # 5%
+        _make_file_entry("low-expl", False, None, 5, 100, 500, 300, 3, 2),  # 5%
         _make_file_entry("high-expl", False, None, 80, 100, 16384, 8000, 50, 45),  # 80%
     ]
     html = _build_summary_table(entries)
@@ -200,13 +231,10 @@ def test_summary_table_sort_order():
 
 def test_summary_table_html_escaping():
     """Model names with special chars must be HTML-escaped."""
-    entries = [_make_file_entry("model<>&\"", False, None, 0, 10, 0, 0, 0, 0)]
+    entries = [_make_file_entry('model<>&"', False, None, 0, 10, 0, 0, 0, 0)]
     html = _build_summary_table(entries)
     assert "<script>" not in html
     assert "model&lt;&gt;&amp;" in html
-
-
-
 
 
 def _entries_with_ctx(n=3):
@@ -251,7 +279,12 @@ def test_chart_token_usage_empty():
 def test_chart_token_usage_no_token_data():
     """All entries have no token data → empty string."""
     entries = [
-        {"model": "m", "think": False, "rewrite_model": None, "tag": None,
-         "_ctx": {"expl_pct": 10.0, "token_totals": []}},
+        {
+            "model": "m",
+            "think": False,
+            "rewrite_model": None,
+            "tag": None,
+            "_ctx": {"expl_pct": 10.0, "token_totals": []},
+        },
     ]
     assert _chart_token_usage(entries) == ""

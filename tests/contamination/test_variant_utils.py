@@ -85,8 +85,6 @@ class TestContaminationScore:
 # --- Oracle tests (no real sandbox needed) ---
 
 
-
-
 class TestRunOracle:
     def test_successful_pairs(self):
         sandbox = MagicMock()
@@ -111,9 +109,6 @@ class TestRunOracle:
         assert pairs == []
 
 
-
-
-
 class TestPairResults:
     def test_basic_pairing(self):
         originals = [
@@ -121,8 +116,20 @@ class TestPairResults:
             {"input": {"task_id": "HumanEval/1"}, "final_result": {"exit_code": 1}},
         ]
         variants = [
-            {"input": {"task_id": "HumanEvalVariant/0", "original_task_id": "HumanEval/0"}, "final_result": {"exit_code": 1}},
-            {"input": {"task_id": "HumanEvalVariant/1", "original_task_id": "HumanEval/1"}, "final_result": {"exit_code": 0}},
+            {
+                "input": {
+                    "task_id": "HumanEvalVariant/0",
+                    "original_task_id": "HumanEval/0",
+                },
+                "final_result": {"exit_code": 1},
+            },
+            {
+                "input": {
+                    "task_id": "HumanEvalVariant/1",
+                    "original_task_id": "HumanEval/1",
+                },
+                "final_result": {"exit_code": 0},
+            },
         ]
         pairs = pair_results(originals, variants)
         # HumanEval/0: pass orig (exit 0), fail var (exit 1) → (True, False)
@@ -134,7 +141,13 @@ class TestPairResults:
             {"input": {"task_id": "HumanEval/0"}, "final_result": {"exit_code": 0}},
         ]
         variants = [
-            {"input": {"task_id": "HumanEvalVariant/99", "original_task_id": "HumanEval/99"}, "final_result": {"exit_code": 0}},
+            {
+                "input": {
+                    "task_id": "HumanEvalVariant/99",
+                    "original_task_id": "HumanEval/99",
+                },
+                "final_result": {"exit_code": 0},
+            },
         ]
         pairs = pair_results(originals, variants)
         assert pairs == []

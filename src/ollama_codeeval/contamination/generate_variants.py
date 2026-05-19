@@ -18,11 +18,22 @@ import re
 from pathlib import Path
 
 from rich.console import Console
-from rich.progress import BarColumn, MofNCompleteColumn, Progress, SpinnerColumn, TextColumn
+from rich.progress import (
+    BarColumn,
+    MofNCompleteColumn,
+    Progress,
+    SpinnerColumn,
+    TextColumn,
+)
 
 from ollama_codeeval.apply_solution import _extract_from_markdown, _strip_thinking_tags
 from ollama_codeeval.autocontext import AutoContextClient
-from ollama_codeeval.config import OLLAMA_HOST, SANDBOX_IMAGE, SANDBOX_LANG, SANDBOX_TIMEOUT
+from ollama_codeeval.config import (
+    OLLAMA_HOST,
+    SANDBOX_IMAGE,
+    SANDBOX_LANG,
+    SANDBOX_TIMEOUT,
+)
 from ollama_codeeval.data import load_data
 from ollama_codeeval.sandbox import Sandbox
 
@@ -229,7 +240,9 @@ def main():
     succeeded = 0
     failed_ids = []
 
-    with Sandbox(lang=SANDBOX_LANG, image=SANDBOX_IMAGE, execution_timeout=SANDBOX_TIMEOUT) as sandbox:
+    with Sandbox(
+        lang=SANDBOX_LANG, image=SANDBOX_IMAGE, execution_timeout=SANDBOX_TIMEOUT
+    ) as sandbox:
         with gzip.open(output_path, "wt", encoding="utf-8") as out_f:
             with Progress(
                 SpinnerColumn(),
@@ -249,9 +262,13 @@ def main():
                         failed_ids.append(tid)
                     progress.advance(prog)
 
-    console.print(f"\n[green]Done.[/green] {succeeded}/{len(tasks)} variants generated.")
+    console.print(
+        f"\n[green]Done.[/green] {succeeded}/{len(tasks)} variants generated."
+    )
     if failed_ids:
-        console.print(f"[yellow]Failed ({len(failed_ids)}):[/yellow] {', '.join(failed_ids)}")
+        console.print(
+            f"[yellow]Failed ({len(failed_ids)}):[/yellow] {', '.join(failed_ids)}"
+        )
 
 
 if __name__ == "__main__":

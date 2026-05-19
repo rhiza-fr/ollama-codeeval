@@ -9,7 +9,9 @@ def _truncate_code(code: str, max_lines: int = 200) -> str:
     return "\n".join(kept) + f"\n... [{len(lines) - max_lines} lines truncated]"
 
 
-def build_fix_prompt(generated_prompt: str, code: str, error: str, iterations: list) -> str:
+def build_fix_prompt(
+    generated_prompt: str, code: str, error: str, iterations: list
+) -> str:
     """Build a prompt asking the LLM to fix a failed solution."""
     prompt = (
         "You were originally asked the question:\n\n"
@@ -40,19 +42,19 @@ def build_fix_prompt(generated_prompt: str, code: str, error: str, iterations: l
         + "Please regenerate a solution that solves this test. Do not repeat the exact same solution that caused the error."
     )
 
-   # It is debatable whether it is a good idea, to show the model so many of its own mistakes.
-   #  previous_attempts = []
-   #  for i, iteration in enumerate(iterations):
-   #      msg = iteration.get("message", {}).get("content", "")
-   #      if msg:
-   #          lines = msg.strip().splitlines()[:10]
-   #          previous_attempts.append(f"Attempt {i + 1}:\n" + "\n".join(lines))
-   #  if previous_attempts:
-   #      prompt += (
-   #          "\n\nYour previous attempts that failed:\n"
-   #          + "\n\n".join(previous_attempts)
-   #          + "\n\nYou MUST try a fundamentally different approach. Do not reuse the same algorithm or logic structure."
-   #      )
+    # It is debatable whether it is a good idea, to show the model so many of its own mistakes.
+    #  previous_attempts = []
+    #  for i, iteration in enumerate(iterations):
+    #      msg = iteration.get("message", {}).get("content", "")
+    #      if msg:
+    #          lines = msg.strip().splitlines()[:10]
+    #          previous_attempts.append(f"Attempt {i + 1}:\n" + "\n".join(lines))
+    #  if previous_attempts:
+    #      prompt += (
+    #          "\n\nYour previous attempts that failed:\n"
+    #          + "\n\n".join(previous_attempts)
+    #          + "\n\nYou MUST try a fundamentally different approach. Do not reuse the same algorithm or logic structure."
+    #      )
     return prompt
 
 

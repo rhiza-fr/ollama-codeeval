@@ -4,7 +4,9 @@ import bisect
 import math
 
 
-def compute_yield(times: list[float], rates: list[float], t_min: float, t_max: float) -> float:
+def compute_yield(
+    times: list[float], rates: list[float], t_min: float, t_max: float
+) -> float:
     """
     Compute Log-Time Yield for a step-function timeseries.
 

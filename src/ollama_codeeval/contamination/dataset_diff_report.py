@@ -21,7 +21,9 @@ def _prompt_diff(original: str, variant: str) -> str:
     """Return a unified diff of two prompts as a fenced markdown block."""
     orig_lines = original.splitlines(keepends=True)
     var_lines = variant.splitlines(keepends=True)
-    diff = difflib.unified_diff(orig_lines, var_lines, fromfile="original", tofile="variant", lineterm="")
+    diff = difflib.unified_diff(
+        orig_lines, var_lines, fromfile="original", tofile="variant", lineterm=""
+    )
     diff_text = "".join(diff)
     if not diff_text:
         return "_No difference in prompt._\n"
@@ -72,10 +74,30 @@ def generate_report(original_path: Path, variants_path: Path) -> str:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Generate a markdown dataset diff report.")
-    parser.add_argument("original", nargs="?", type=Path, default=None, help="Path to original .jsonl.gz")
-    parser.add_argument("variants", nargs="?", type=Path, default=DEFAULT_VARIANTS, help="Path to variants .jsonl.gz")
-    parser.add_argument("-o", "--output", type=Path, default=None, help="Write report to file instead of stdout")
+    parser = argparse.ArgumentParser(
+        description="Generate a markdown dataset diff report."
+    )
+    parser.add_argument(
+        "original",
+        nargs="?",
+        type=Path,
+        default=None,
+        help="Path to original .jsonl.gz",
+    )
+    parser.add_argument(
+        "variants",
+        nargs="?",
+        type=Path,
+        default=DEFAULT_VARIANTS,
+        help="Path to variants .jsonl.gz",
+    )
+    parser.add_argument(
+        "-o",
+        "--output",
+        type=Path,
+        default=None,
+        help="Write report to file instead of stdout",
+    )
     args = parser.parse_args()
 
     original_path = args.original or _get_data_path()

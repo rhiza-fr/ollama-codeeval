@@ -20,9 +20,13 @@ def resolve_model_name(name: str, stats: dict[str, dict] | None) -> str:
     if stats and name in stats:
         digest = stats[name].get("digest")
         if digest:
-            aliases: list[str] = [k for k, v in stats.items() if v.get("digest") == digest]
+            aliases: list[str] = [
+                k for k, v in stats.items() if v.get("digest") == digest
+            ]
             if len(aliases) > 1:
-                non_latest: list[str] = [a for a in aliases if not a.endswith(":latest")]
+                non_latest: list[str] = [
+                    a for a in aliases if not a.endswith(":latest")
+                ]
                 candidates: list[str] = non_latest if non_latest else aliases
                 candidates.sort(key=len)
                 resolved = candidates[0]
@@ -106,9 +110,12 @@ def _dataset_variant(stem: str) -> str:
             s = s[: -len(suf)]
             break
     known: list[str] = [
-        "human-eval-enhanced-202307", "humaneval-rewritten-gpt-oss20b",
-        "humaneval-rewritten-ministral-314b", "humaneval-rewritten-qwen34b",
-        "humaneval-rewritten-qwen3-coder", "humaneval",
+        "human-eval-enhanced-202307",
+        "humaneval-rewritten-gpt-oss20b",
+        "humaneval-rewritten-ministral-314b",
+        "humaneval-rewritten-qwen34b",
+        "humaneval-rewritten-qwen3-coder",
+        "humaneval",
     ]
     known.sort(key=len, reverse=True)
     for k in known:
@@ -128,7 +135,9 @@ def load_all_models(
         name = path.stem
         if "champion" in name or "cascade" in name:
             continue
-        if dataset not in name and dataset.replace("-", "") not in name.replace("-", ""):
+        if dataset not in name and dataset.replace("-", "") not in name.replace(
+            "-", ""
+        ):
             continue
         variant = _dataset_variant(name)
         if "rewritten" in variant and "rewritten" not in dataset:
@@ -162,8 +171,10 @@ def load_all_models(
     if len(by_variant) > 1:
         counts = {v: len(m) for v, m in by_variant.items()}
         print(f"Multiple dataset variants found: {counts}")
-        print(f"Using '{best_variant}' ({counts[best_variant]} models). "
-              "Pass --dataset with a more specific name to override.")
+        print(
+            f"Using '{best_variant}' ({counts[best_variant]} models). "
+            "Pass --dataset with a more specific name to override."
+        )
     return by_variant[best_variant], load_times
 
 
@@ -241,7 +252,8 @@ def _best_new_model(
         # Models that overflow when added cumulatively are still allowed — they pay a
         # load-time penalty in _cascade_expected_time instead.
         new_candidates = [
-            m for m in new_candidates
+            m
+            for m in new_candidates
             if (_vram_mb(m, vram_per_model) or 0) <= vram_budget_mb
         ]
     candidates: list[tuple[float, str, int, dict]] = []
@@ -251,7 +263,9 @@ def _best_new_model(
             n = len(s["passing_tasks"])
             if n > 0:
                 if tau is not None:
-                    discount = 1.0 / (1.0 + (cumulative_time_before + s["avg_time_s"]) / tau)
+                    discount = 1.0 / (
+                        1.0 + (cumulative_time_before + s["avg_time_s"]) / tau
+                    )
                     score = n * discount
                 else:
                     score = float(n)
@@ -285,7 +299,9 @@ def _best_extension(
             continue
         delta_t = s_new["avg_time_s"] - s_base["avg_time_s"]
         if tau is not None:
-            discount = 1.0 / (1.0 + (cumulative_time_before + s_new["avg_time_s"]) / tau)
+            discount = 1.0 / (
+                1.0 + (cumulative_time_before + s_new["avg_time_s"]) / tau
+            )
             score = len(extra) * discount
         else:
             score = float(len(extra))
@@ -329,8 +345,12 @@ def _cascade_expected_time(
 
 
 def _apply_new_model(
-    best_new: tuple, vram_per_model: dict[str, int], model_load_times: dict | None,
-    remaining_models: set[str], covered: set[str], uncovered: set[str],
+    best_new: tuple,
+    vram_per_model: dict[str, int],
+    model_load_times: dict | None,
+    remaining_models: set[str],
+    covered: set[str],
+    uncovered: set[str],
     cumulative_vram: int,
 ) -> tuple:
     """Apply a new-model action and return the updated state."""
@@ -381,7 +401,11 @@ def greedy_cascade(
         model_load_times: Optional dict of measured load times (stats only).
     """
     max_budget = max(
-        (len(t["iter_durations"]) for tasks in model_data.values() for t in tasks.values()),
+        (
+            len(t["iter_durations"])
+            for tasks in model_data.values()
+            for t in tasks.values()
+        ),
         default=1,
     )
     all_task_ids: set[str] = set(next(iter(model_data.values())).keys())
@@ -403,13 +427,22 @@ def greedy_cascade(
         cumul_t_before_last = sum(s["avg_time_s"] for _, _, _, _, s in entries[:-1])
 
         new_candidates, _ = _best_new_model(
-            remaining_models, model_data, uncovered, max_budget,
-            cumulative_vram, vram_per_model, vram_budget_mb,
-            tau=tau, cumulative_time_before=cumul_t,
+            remaining_models,
+            model_data,
+            uncovered,
+            max_budget,
+            cumulative_vram,
+            vram_per_model,
+            vram_budget_mb,
+            tau=tau,
+            cumulative_time_before=cumul_t,
         )
         best_ext_score, best_ext = _best_extension(
-            entries, model_data, max_budget,
-            tau=tau, cumulative_time_before=cumul_t_before_last,
+            entries,
+            model_data,
+            max_budget,
+            tau=tau,
+            cumulative_time_before=cumul_t_before_last,
         )
 
         if not new_candidates and best_ext is None:
@@ -430,9 +463,19 @@ def greedy_cascade(
             trial_stats["avg_time_s"] = s_new["avg_time_s"]
             trial_stats["pass_rate"] = s_new["pass_rate"]
             trial_entries = list(entries)
-            trial_entries[-1] = (last_model, new_b, entry_unc, last_passing | extra, trial_stats)
+            trial_entries[-1] = (
+                last_model,
+                new_b,
+                entry_unc,
+                last_passing | extra,
+                trial_stats,
+            )
             trial_etct = _cascade_expected_time(
-                trial_entries, total_tasks, vram_budget_mb, model_load_times, vram_per_model,
+                trial_entries,
+                total_tasks,
+                vram_budget_mb,
+                model_load_times,
+                vram_per_model,
             )
             if trial_etct <= tau:
                 covered |= extra
@@ -441,7 +484,13 @@ def greedy_cascade(
                 last_stats["cumulative_coverage"] = len(covered)
                 last_stats["pass_rate"] = s_new["pass_rate"]
                 last_stats["avg_time_s"] = s_new["avg_time_s"]
-                entries[-1] = (last_model, new_b, entry_unc, last_passing | extra, last_stats)
+                entries[-1] = (
+                    last_model,
+                    new_b,
+                    entry_unc,
+                    last_passing | extra,
+                    last_stats,
+                )
                 action_taken = True
             # If extension violates budget, fall through to try new models.
 
@@ -451,12 +500,21 @@ def greedy_cascade(
             chosen = None
             for _score, m, b, s in new_candidates:
                 trial_entry, _ = _apply_new_model(
-                    (m, b, s), vram_per_model, model_load_times,
-                    set(remaining_models), set(covered), set(uncovered), cumulative_vram,
+                    (m, b, s),
+                    vram_per_model,
+                    model_load_times,
+                    set(remaining_models),
+                    set(covered),
+                    set(uncovered),
+                    cumulative_vram,
                 )
                 trial_entries = list(entries) + [trial_entry]
                 trial_etct = _cascade_expected_time(
-                    trial_entries, total_tasks, vram_budget_mb, model_load_times, vram_per_model,
+                    trial_entries,
+                    total_tasks,
+                    vram_budget_mb,
+                    model_load_times,
+                    vram_per_model,
                 )
                 if trial_etct <= tau:
                     chosen = (m, b, s)
@@ -465,8 +523,12 @@ def greedy_cascade(
             if chosen is not None:
                 entry, cumulative_vram = _apply_new_model(
                     (chosen[0], chosen[1], chosen[2]),
-                    vram_per_model, model_load_times,
-                    remaining_models, covered, uncovered, cumulative_vram,
+                    vram_per_model,
+                    model_load_times,
+                    remaining_models,
+                    covered,
+                    uncovered,
+                    cumulative_vram,
                 )
                 entries.append(entry)
                 action_taken = True

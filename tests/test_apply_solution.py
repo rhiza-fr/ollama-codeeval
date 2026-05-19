@@ -8,8 +8,8 @@ from ollama_codeeval.apply_solution import (
 )
 
 PROMPT = (
-    'from typing import List\n\n'
-    'def has_close_elements(numbers: List[float], threshold: float) -> bool:\n'
+    "from typing import List\n\n"
+    "def has_close_elements(numbers: List[float], threshold: float) -> bool:\n"
     '    """ Docstring """\n'
 )
 ENTRYPOINT = "has_close_elements"
@@ -112,13 +112,13 @@ class TestApplySolution:
 
     def test_multiple_markdown_blocks_prefers_entrypoint(self):
         solution = (
-            '\nSome text.\n'
+            "\nSome text.\n"
             '```python\nprint("hello")\n```\n'
-            '```python\n'
-            'def has_close_elements(numbers: List[float], threshold: float) -> bool:\n'
-            '    return True\n'
-            '```\n'
-            '```python\nx = 1\n```\n'
+            "```python\n"
+            "def has_close_elements(numbers: List[float], threshold: float) -> bool:\n"
+            "    return True\n"
+            "```\n"
+            "```python\nx = 1\n```\n"
         )
         result = apply_solution(PROMPT, solution, ENTRYPOINT)
         assert "return True" in result

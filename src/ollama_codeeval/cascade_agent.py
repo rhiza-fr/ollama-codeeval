@@ -40,9 +40,13 @@ class CascadeGenerateNode(Node):
             options=prep_res["options"],
         )
 
-    def post(self, shared: dict[str, Any], prep_res: Any, exec_res: ThinkResponse | None) -> str:
+    def post(
+        self, shared: dict[str, Any], prep_res: Any, exec_res: ThinkResponse | None
+    ) -> str:
         if exec_res is None:
-            shared["iterations"].append({"test_result": _fail_test_result("LLM generation failed")})
+            shared["iterations"].append(
+                {"test_result": _fail_test_result("LLM generation failed")}
+            )
             return "fail"
         result = exec_res.to_dict()
         result["prompt"] = prep_res["prompt"]
@@ -80,28 +84,28 @@ class EscalateNode(Node):
 
 def create_cascade_flow() -> Flow:
     """Wire the cascade flow."""
-    fmt      = FormatOriginalQuestionNode()
+    fmt = FormatOriginalQuestionNode()
     generate = CascadeGenerateNode()
-    rufffix  = RuffFixNode()
-    execute  = CascadeExecuteNode()
+    rufffix = RuffFixNode()
+    execute = CascadeExecuteNode()
     escalate = EscalateNode()
-    fix      = FixNode()
-    respond  = RespondNode()
+    fix = FixNode()
+    respond = RespondNode()
 
-    fmt      - "default"    >> generate
-    generate - "default"    >> rufffix
-    generate - "fail"       >> respond
-    rufffix  - "clean"      >> execute
-    rufffix  - "lint_error" >> generate
-    rufffix  - "fail"       >> respond
-    execute  - "ok"         >> respond
-    execute  - "escalate"   >> escalate
-    execute  - "error"      >> fix
-    execute  - "fail"       >> respond
-    escalate - "generate"   >> generate
-    escalate - "fail"       >> respond
-    fix      - "default"    >> rufffix
-    fix      - "stuck"      >> escalate
+    fmt - "default" >> generate
+    generate - "default" >> rufffix
+    generate - "fail" >> respond
+    rufffix - "clean" >> execute
+    rufffix - "lint_error" >> generate
+    rufffix - "fail" >> respond
+    execute - "ok" >> respond
+    execute - "escalate" >> escalate
+    execute - "error" >> fix
+    execute - "fail" >> respond
+    escalate - "generate" >> generate
+    escalate - "fail" >> respond
+    fix - "default" >> rufffix
+    fix - "stuck" >> escalate
 
     return Flow(start=fmt)
 
@@ -137,19 +141,19 @@ def run_cascade_flow(
     flow = create_cascade_flow()
     first_model, first_max = cascade[0]
     shared: dict[str, Any] = {
-        "input":             test_row,
-        "generated_prompt":  "",
-        "current_model":     first_model,
-        "model":             first_model,
-        "tier_max_iters":    first_max,
-        "tier_start_iter":   0,
+        "input": test_row,
+        "generated_prompt": "",
+        "current_model": first_model,
+        "model": first_model,
+        "tier_max_iters": first_max,
+        "tier_start_iter": 0,
         "cascade_remaining": list(cascade[1:]),
-        "think":             think,
-        "iterations":        [],
+        "think": think,
+        "iterations": [],
         "options": {
             "temperature": MODEL_TEMPERATURE,
         },
-        "max_iterations":    sum(m for _, m in cascade),
+        "max_iterations": sum(m for _, m in cascade),
     }
     flow.run(shared=shared)
     return shared

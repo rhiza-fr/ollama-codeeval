@@ -46,9 +46,7 @@ def ruff_fix(code: str) -> tuple[str, int, str]:
 
         fixed_code = fixed if fixed else code
         remaining_errors = (
-            (chk.stdout or "") + (chk.stderr or "")
-            if chk.returncode != 0
-            else ""
+            (chk.stdout or "") + (chk.stderr or "") if chk.returncode != 0 else ""
         )
         return (fixed_code, chk.returncode, remaining_errors)
     finally:

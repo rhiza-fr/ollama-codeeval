@@ -5,7 +5,12 @@ from statistics import median
 
 from rich.logging import RichHandler
 
-from ollama_codeeval.report._shared import _model_label, load_model_stats, normalize_dataset, resolve_model_name
+from ollama_codeeval.report._shared import (
+    _model_label,
+    load_model_stats,
+    normalize_dataset,
+    resolve_model_name,
+)
 
 _model_stats: dict | None = None
 
@@ -56,7 +61,12 @@ ERROR_ALIASES = {
     "Server Error": "OtherError",
     "referenced before assignment": "NameError",
 }
-_ERROR_COUNTS_TEMPLATE = {"Success": 0, "PredictLengthExceededError": 0, "RepetitionError": 0, "OtherError": 0}
+_ERROR_COUNTS_TEMPLATE = {
+    "Success": 0,
+    "PredictLengthExceededError": 0,
+    "RepetitionError": 0,
+    "OtherError": 0,
+}
 for _e in ERROR_TYPES:
     _ERROR_COUNTS_TEMPLATE[_e] = 0
 
@@ -96,7 +106,9 @@ def _compute_iteration_stats(tasks, num_iterations=6):
                 already_passed = True
             C_i[i] += 1
 
-    percent_pass = [P_i[i] / C_i[i] * 100 if C_i[i] > 0 else 0 for i in range(num_iterations)]
+    percent_pass = [
+        P_i[i] / C_i[i] * 100 if C_i[i] > 0 else 0 for i in range(num_iterations)
+    ]
     cum_pass = [sum(P_i[: i + 1]) / N * 100 for i in range(num_iterations)]
     return percent_pass, cum_pass
 
@@ -109,12 +121,12 @@ def _parse_tag_from_filename(path: str) -> str | None:
     name = Path(path).stem
     if not name.startswith("results_"):
         return None
-    rest = name[len("results_"):]
+    rest = name[len("results_") :]
     for marker in ("_nothink", "_think"):
         idx = rest.rfind(marker)
         if idx == -1:
             continue
-        after = rest[idx + len(marker):]
+        after = rest[idx + len(marker) :]
         if after == "" or after.startswith("_"):
             return after.lstrip("_") or None
     return None
@@ -175,7 +187,9 @@ def process_jsonl_file(jsonl_file, no_cache=False):
     time_per_it = median(iteration_durations) if iteration_durations else 0
     total_time = total_time / 1000000000.0 if total_tests > 0 else 0
     average_time_per_test = total_time / total_tests if total_tests > 0 else 0
-    success_per_1k_tokens = passed_tests / (total_tokens / 1000) if total_tokens > 0 else 0
+    success_per_1k_tokens = (
+        passed_tests / (total_tokens / 1000) if total_tokens > 0 else 0
+    )
     success_per_minute = passed_tests / (total_time / 60) if total_time > 0 else 0
     percent_pass_per_iteration, cum_pass_per_iteration = _compute_iteration_stats(tasks)
 

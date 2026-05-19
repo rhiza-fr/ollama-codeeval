@@ -2,7 +2,13 @@
 
 import html
 
-from ollama_codeeval.report._shared import CSS_BLOCK, OUTPUT_DIR, SORT_SCRIPT, _nav_html, compute_yield
+from ollama_codeeval.report._shared import (
+    CSS_BLOCK,
+    OUTPUT_DIR,
+    SORT_SCRIPT,
+    _nav_html,
+    compute_yield,
+)
 from ollama_codeeval.report.html_violin import chart_combined_progression
 
 _REWRITE_PREFIX = "humaneval-rewritten-"
@@ -14,7 +20,7 @@ def _pass_rate(d: dict) -> float:
 
 def _extract_rewriter(dataset: str) -> str | None:
     if dataset.startswith(_REWRITE_PREFIX):
-        return dataset[len(_REWRITE_PREFIX):]
+        return dataset[len(_REWRITE_PREFIX) :]
     return None
 
 
@@ -38,7 +44,9 @@ def _build_matrix(baseline: dict, rewrite: dict, sorted_rewriters: list[str]) ->
     header = (
         '<th class="sortable">Model</th>'
         '<th class="sortable">Baseline</th>'
-        + "".join(f'<th class="sortable">{html.escape(rw)}</th>' for rw in sorted_rewriters)
+        + "".join(
+            f'<th class="sortable">{html.escape(rw)}</th>' for rw in sorted_rewriters
+        )
     )
 
     rows = []
@@ -53,7 +61,8 @@ def _build_matrix(baseline: dict, rewrite: dict, sorted_rewriters: list[str]) ->
 
         rw_cells = "".join(
             _delta_cell(_pass_rate(rewrite[(model, rw)]), base_pct)
-            if (model, rw) in rewrite else "<td>—</td>"
+            if (model, rw) in rewrite
+            else "<td>—</td>"
             for rw in sorted_rewriters
         )
         rows.append(f"<tr><td>{html.escape(model)}</td>{base_cell}{rw_cells}</tr>")

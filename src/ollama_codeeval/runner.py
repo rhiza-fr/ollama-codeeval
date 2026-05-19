@@ -48,7 +48,6 @@ def slugify(value, allow_unicode=False):
     return re.sub("[-\\s]+", "-", value).strip("-_")
 
 
-
 async def run_eval(
     dataset: list[dict[str, str]],
     models: list[str] = ["qwen3"],
@@ -103,7 +102,9 @@ async def run_eval(
             if workers <= 1:
                 for r in dataset:
                     if cascade is not None:
-                        execution_log = run_cascade_flow(r, cascade=cascade, think=think)
+                        execution_log = run_cascade_flow(
+                            r, cascade=cascade, think=think
+                        )
                     else:
                         execution_log = run_flow(r, model, think)
                     execution_log["dataset"] = dataset_name
@@ -116,7 +117,9 @@ async def run_eval(
 
                 def _run_one(row):
                     if cascade is not None:
-                        return row["task_id"], run_cascade_flow(row, cascade=cascade, think=think)
+                        return row["task_id"], run_cascade_flow(
+                            row, cascade=cascade, think=think
+                        )
                     return row["task_id"], run_flow(row, model, think)
 
                 with ThreadPoolExecutor(max_workers=workers) as pool:
@@ -166,5 +169,3 @@ def is_error(results: dict[str, object] | None) -> bool:
     if results.get("stderr", "") or results.get("stdout", ""):
         return True
     return False
-
-

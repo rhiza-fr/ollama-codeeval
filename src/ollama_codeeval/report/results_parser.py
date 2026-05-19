@@ -51,7 +51,11 @@ def extract_data_from_directory(input_directory, output_file, no_cache=False):
                 try:
                     record = json.loads(line)
                     dataset = normalize_dataset(record.get("dataset", "humaneval"))
-                    model = "cascade" if tag.startswith(("cascade", "champion")) else record.get("model")
+                    model = (
+                        "cascade"
+                        if tag.startswith(("cascade", "champion"))
+                        else record.get("model")
+                    )
                     series_title = f"{model}_think={record.get('think', False)}_dataset={dataset}_tag={tag}"
                     for iteration in record.get("iterations", []):
                         if (duration := iteration.get("total_duration")) is not None:
@@ -67,11 +71,17 @@ def extract_data_from_directory(input_directory, output_file, no_cache=False):
                         for it in record.get("iterations", [])
                     )
                     total_time_s = total_duration_ns / 1000000000
-                    status = "success" if record.get("final_result", {}).get("exit_code") == 0 else "failure"
+                    status = (
+                        "success"
+                        if record.get("final_result", {}).get("exit_code") == 0
+                        else "failure"
+                    )
                     raw_model_data[series_title]["tasks"].append(
                         {
                             "task_id": record["input"]["task_id"],
-                            "time_to_success": total_time_s if status == "success" else None,
+                            "time_to_success": total_time_s
+                            if status == "success"
+                            else None,
                             "total_time_s": total_time_s,
                             "status": status,
                         }
@@ -123,10 +133,14 @@ def extract_data_from_directory(input_directory, output_file, no_cache=False):
                 if task["status"] == "success":
                     cumulative_successes += 1
                     seq_timeseries["times"].append(cumulative_time)
-                    seq_timeseries["success_rates"].append(cumulative_successes / total_tasks * 100.0)
+                    seq_timeseries["success_rates"].append(
+                        cumulative_successes / total_tasks * 100.0
+                    )
             # Final point: extend to total cumulative time so the curve doesn't end early
             seq_timeseries["times"].append(cumulative_time)
-            seq_timeseries["success_rates"].append(cumulative_successes / total_tasks * 100.0)
+            seq_timeseries["success_rates"].append(
+                cumulative_successes / total_tasks * 100.0
+            )
 
         processed_data[series_title] = {
             "metadata": {

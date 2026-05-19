@@ -32,10 +32,14 @@ class TestComputeYield:
             _make_task(0, [8_000_000_000]),
             _make_task(0, [3_000_000_000]),
         ]
-        assert compute_yield(tasks) == pytest.approx(compute_yield([
-            _make_task(0, [3_000_000_000]),
-            _make_task(0, [8_000_000_000]),
-        ]))
+        assert compute_yield(tasks) == pytest.approx(
+            compute_yield(
+                [
+                    _make_task(0, [3_000_000_000]),
+                    _make_task(0, [8_000_000_000]),
+                ]
+            )
+        )
 
 
 class TestComputeAllYield:

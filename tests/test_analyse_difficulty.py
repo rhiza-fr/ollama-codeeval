@@ -33,33 +33,42 @@ def test_prompt_chars():
     assert chars == 5
 
 
-
-
-
 def test_label_description():
     # High rewrite sensitivity + high assertion rate → description problem
-    assert _label(base_pass_rate=0.3, rewrite_sensitivity=0.5, iter1_assertion_rate=0.6) == "description?"
+    assert (
+        _label(base_pass_rate=0.3, rewrite_sensitivity=0.5, iter1_assertion_rate=0.6)
+        == "description?"
+    )
 
 
 def test_label_algorithm():
     # Low pass rate, neutral rewrite, low assertion rate → algorithm problem
-    assert _label(base_pass_rate=0.2, rewrite_sensitivity=0.05, iter1_assertion_rate=0.1) == "algorithm?"
+    assert (
+        _label(base_pass_rate=0.2, rewrite_sensitivity=0.05, iter1_assertion_rate=0.1)
+        == "algorithm?"
+    )
 
 
 def test_label_empty_when_ambiguous():
-    assert _label(base_pass_rate=0.8, rewrite_sensitivity=0.0, iter1_assertion_rate=0.0) == ""
+    assert (
+        _label(base_pass_rate=0.8, rewrite_sensitivity=0.0, iter1_assertion_rate=0.0)
+        == ""
+    )
 
 
 def test_label_description_boundary():
     # Exactly at threshold: rewrite_sensitivity=0.2, iter1_assertion_rate=0.3 → NOT description (needs strictly greater)
-    assert _label(base_pass_rate=0.3, rewrite_sensitivity=0.2, iter1_assertion_rate=0.3) == ""
+    assert (
+        _label(base_pass_rate=0.3, rewrite_sensitivity=0.2, iter1_assertion_rate=0.3)
+        == ""
+    )
 
 
 def test_label_description_above_boundary():
-    assert _label(base_pass_rate=0.3, rewrite_sensitivity=0.21, iter1_assertion_rate=0.31) == "description?"
-
-
-
+    assert (
+        _label(base_pass_rate=0.3, rewrite_sensitivity=0.21, iter1_assertion_rate=0.31)
+        == "description?"
+    )
 
 
 def _make_iter(exit_code=0, done_reason="stop", stderr=""):
@@ -84,7 +93,11 @@ def _make_data(model, think, rewrite_model, tasks):
 
 
 def test_single_base_run_pass():
-    data = [_make_data("m1", False, None, [_make_task("HumanEval/0", "def f(): pass", exit_code=0)])]
+    data = [
+        _make_data(
+            "m1", False, None, [_make_task("HumanEval/0", "def f(): pass", exit_code=0)]
+        )
+    ]
     signals = compute_difficulty_signals(data)
     assert "HumanEval/0" in signals
     s = signals["HumanEval/0"]
@@ -93,40 +106,67 @@ def test_single_base_run_pass():
 
 
 def test_single_base_run_fail():
-    data = [_make_data("m1", False, None, [_make_task("HumanEval/0", "def f(): pass", exit_code=1)])]
+    data = [
+        _make_data(
+            "m1", False, None, [_make_task("HumanEval/0", "def f(): pass", exit_code=1)]
+        )
+    ]
     signals = compute_difficulty_signals(data)
     assert signals["HumanEval/0"].base_pass_rate == 0.0
 
 
 def test_rewrite_improves():
     """Base fails, rewrite passes → positive sensitivity."""
-    base = _make_data("m1", False, None, [_make_task("HumanEval/0", "short prompt", exit_code=1)])
-    rw = _make_data("m1", False, "rewriter", [_make_task("HumanEval/0", "short prompt", exit_code=0)])
+    base = _make_data(
+        "m1", False, None, [_make_task("HumanEval/0", "short prompt", exit_code=1)]
+    )
+    rw = _make_data(
+        "m1",
+        False,
+        "rewriter",
+        [_make_task("HumanEval/0", "short prompt", exit_code=0)],
+    )
     signals = compute_difficulty_signals([base, rw])
     assert signals["HumanEval/0"].rewrite_sensitivity == 1.0
 
 
 def test_rewrite_regresses():
     """Base passes, rewrite fails → negative sensitivity."""
-    base = _make_data("m1", False, None, [_make_task("HumanEval/0", "prompt", exit_code=0)])
-    rw = _make_data("m1", False, "rewriter", [_make_task("HumanEval/0", "prompt", exit_code=1)])
+    base = _make_data(
+        "m1", False, None, [_make_task("HumanEval/0", "prompt", exit_code=0)]
+    )
+    rw = _make_data(
+        "m1", False, "rewriter", [_make_task("HumanEval/0", "prompt", exit_code=1)]
+    )
     signals = compute_difficulty_signals([base, rw])
     assert signals["HumanEval/0"].rewrite_sensitivity == -1.0
 
 
 def test_iter1_assertion_rate():
     """Iter 1 fails with AssertionError → iter1_assertion_rate = 1.0."""
-    base = _make_data("m1", False, None, [
-        _make_task("HumanEval/0", "prompt", exit_code=1,
-                   iter1_exit=1, iter1_stderr="E   assert result == expected")
-    ])
+    base = _make_data(
+        "m1",
+        False,
+        None,
+        [
+            _make_task(
+                "HumanEval/0",
+                "prompt",
+                exit_code=1,
+                iter1_exit=1,
+                iter1_stderr="E   assert result == expected",
+            )
+        ],
+    )
     signals = compute_difficulty_signals([base])
     assert signals["HumanEval/0"].iter1_assertion_rate == 1.0
 
 
 def test_no_base_runs_for_task():
     """Task only appears in rewrite data (no matching base) → signals still present but zeroed."""
-    rw = _make_data("m1", False, "rewriter", [_make_task("HumanEval/0", "prompt", exit_code=0)])
+    rw = _make_data(
+        "m1", False, "rewriter", [_make_task("HumanEval/0", "prompt", exit_code=0)]
+    )
     signals = compute_difficulty_signals([rw])
     assert "HumanEval/0" in signals
     s = signals["HumanEval/0"]
@@ -137,7 +177,9 @@ def test_no_base_runs_for_task():
 def test_prompt_metrics_populated():
     """Prompt metrics are extracted from the task input."""
     prompt = "def f(x):\n    '''\n    >>> f(1)\n    1\n    '''\n"
-    base = _make_data("m1", False, None, [_make_task("HumanEval/0", prompt, exit_code=0)])
+    base = _make_data(
+        "m1", False, None, [_make_task("HumanEval/0", prompt, exit_code=0)]
+    )
     signals = compute_difficulty_signals([base])
     assert signals["HumanEval/0"].n_examples == 1
     assert signals["HumanEval/0"].prompt_chars == len(prompt)

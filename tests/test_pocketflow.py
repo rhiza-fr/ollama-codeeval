@@ -1,4 +1,5 @@
 """Tests for sync pocketflow classes: BaseNode, Node, BatchNode, Flow, BatchFlow."""
+
 import warnings
 
 import pytest

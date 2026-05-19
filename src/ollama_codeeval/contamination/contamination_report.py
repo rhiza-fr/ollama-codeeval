@@ -57,7 +57,9 @@ def _print_table(rows: list[tuple], score: float) -> None:
     n_reverse = sum(1 for _, o, v in rows if not o and v)
     n_both = sum(1 for _, o, v in rows if o and v)
     n_neither = sum(1 for _, o, v in rows if not o and not v)
-    print(f"  pass both: {n_both}  fail both: {n_neither}  contam signal: {n_contam}  reverse: {n_reverse}")
+    print(
+        f"  pass both: {n_both}  fail both: {n_neither}  contam signal: {n_contam}  reverse: {n_reverse}"
+    )
 
 
 def main():

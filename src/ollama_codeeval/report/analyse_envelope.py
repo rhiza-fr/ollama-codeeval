@@ -38,7 +38,11 @@ def interpolate_success_rate(timeseries, time_point):
 
 def _display_name(series_title):
     model = series_title.split("_think=")[0]
-    think = series_title.split("_think=")[1].split("_rewrite=")[0] if "_think=" in series_title else ""
+    think = (
+        series_title.split("_think=")[1].split("_rewrite=")[0]
+        if "_think=" in series_title
+        else ""
+    )
     tag = series_title.split("_tag=")[1] if "_tag=" in series_title else ""
     label = model
     if think == "True":
@@ -90,8 +94,14 @@ def _load_and_filter_data(data_file, output_path, no_cache):
         )
     }
     if rewritten:
-        log.info("Excluding %d rewritten model(s): %s", len(rewritten), ", ".join(sorted(rewritten)))
-    complete_data = {k: v for k, v in data.items() if k not in incomplete and k not in rewritten}
+        log.info(
+            "Excluding %d rewritten model(s): %s",
+            len(rewritten),
+            ", ".join(sorted(rewritten)),
+        )
+    complete_data = {
+        k: v for k, v in data.items() if k not in incomplete and k not in rewritten
+    }
     return data, incomplete, rewritten, complete_data
 
 
@@ -151,10 +161,26 @@ def _compute_cascade_timeline(complete_data):
 
 
 MODERN_COLORS = [
-    "#0ea5e9", "#8b5cf6", "#ec4899", "#f59e0b", "#10b981",
-    "#6366f1", "#ef4444", "#14b8a6", "#f97316", "#a855f7",
-    "#06b6d4", "#84cc16", "#f43f5e", "#22c55e", "#3b82f6",
-    "#d946ef", "#f472b6", "#fbbf24", "#34d399", "#818cf8",
+    "#0ea5e9",
+    "#8b5cf6",
+    "#ec4899",
+    "#f59e0b",
+    "#10b981",
+    "#6366f1",
+    "#ef4444",
+    "#14b8a6",
+    "#f97316",
+    "#a855f7",
+    "#06b6d4",
+    "#84cc16",
+    "#f43f5e",
+    "#22c55e",
+    "#3b82f6",
+    "#d946ef",
+    "#f472b6",
+    "#fbbf24",
+    "#34d399",
+    "#818cf8",
 ]
 
 
@@ -178,8 +204,11 @@ def _add_model_traces(fig, data, incomplete, rewritten):
 
         fig.add_trace(
             go.Scatter(
-                x=ts["times"], y=ts["success_rates"],
-                mode="lines", name=label, legendgroup=model_name,
+                x=ts["times"],
+                y=ts["success_rates"],
+                mode="lines",
+                name=label,
+                legendgroup=model_name,
                 line=dict(width=line_width, color=color, shape="hv"),
                 hovertemplate="<b>%{fullData.name}</b><br>"
                 + "Budget: %{x:.1f}s<br>"
@@ -193,9 +222,13 @@ def _add_model_traces(fig, data, incomplete, rewritten):
         if seq and seq["times"]:
             fig.add_trace(
                 go.Scatter(
-                    x=seq["times"], y=seq["success_rates"],
-                    mode="lines", name=label, legendgroup=model_name,
-                    showlegend=True, visible=False,
+                    x=seq["times"],
+                    y=seq["success_rates"],
+                    mode="lines",
+                    name=label,
+                    legendgroup=model_name,
+                    showlegend=True,
+                    visible=False,
                     line=dict(width=line_width, color=color, shape="hv"),
                     hovertemplate="<b>%{fullData.name}</b><br>"
                     + "Cumulative: %{x:.1f}s<br>"
@@ -218,7 +251,11 @@ def _apply_layout(fig, n_models):
 
     seq_annotation = dict(
         text="Each vertical step = one problem solved.<br>Flat stretches = failures consuming time without progress.",
-        xref="paper", yref="paper", x=0.0, y=-0.13, showarrow=False,
+        xref="paper",
+        yref="paper",
+        x=0.0,
+        y=-0.13,
+        showarrow=False,
         font=dict(family="Inter, system-ui, sans-serif", size=12, color="#6b7280"),
         align="left",
     )
@@ -226,25 +263,38 @@ def _apply_layout(fig, n_models):
     fig.update_layout(
         updatemenus=[
             dict(
-                type="buttons", direction="left",
+                type="buttons",
+                direction="left",
                 buttons=[
                     dict(
-                        label="Independent budget per problem", method="update",
+                        label="Independent budget per problem",
+                        method="update",
                         args=[
                             {"visible": vis_independent, "showlegend": leg_independent},
-                            {"xaxis.title.text": "Time budget per problem (seconds)", "annotations": []},
+                            {
+                                "xaxis.title.text": "Time budget per problem (seconds)",
+                                "annotations": [],
+                            },
                         ],
                     ),
                     dict(
-                        label="Sequential (fastest first)", method="update",
+                        label="Sequential (fastest first)",
+                        method="update",
                         args=[
                             {"visible": vis_sequential, "showlegend": leg_sequential},
-                            {"xaxis.title.text": "Cumulative wall-clock time (seconds)", "annotations": [seq_annotation]},
+                            {
+                                "xaxis.title.text": "Cumulative wall-clock time (seconds)",
+                                "annotations": [seq_annotation],
+                            },
                         ],
                     ),
                 ],
-                pad={"r": 10, "t": 10}, showactive=True,
-                x=0.0, xanchor="left", y=1.12, yanchor="top",
+                pad={"r": 10, "t": 10},
+                showactive=True,
+                x=0.0,
+                xanchor="left",
+                y=1.12,
+                yanchor="top",
             )
         ]
     )
@@ -252,31 +302,86 @@ def _apply_layout(fig, n_models):
     fig.update_layout(
         title={
             "text": "Model Performance Over Time",
-            "font": {"family": "Inter, system-ui, -apple-system, sans-serif", "size": 24, "color": "#1f2937"},
-            "x": 0.05, "xanchor": "left",
+            "font": {
+                "family": "Inter, system-ui, -apple-system, sans-serif",
+                "size": 24,
+                "color": "#1f2937",
+            },
+            "x": 0.05,
+            "xanchor": "left",
         },
         xaxis={
             "type": "log",
-            "title": {"text": "Time budget per problem (seconds)", "font": {"family": "Inter, system-ui, sans-serif", "size": 14, "color": "#4b5563"}, "standoff": 15},
-            "gridcolor": "#e5e7eb", "gridwidth": 1, "zeroline": False,
-            "showline": True, "linewidth": 2, "linecolor": "#d1d5db",
-            "tickfont": {"family": "Inter, system-ui, sans-serif", "size": 12, "color": "#6b7280"},
+            "title": {
+                "text": "Time budget per problem (seconds)",
+                "font": {
+                    "family": "Inter, system-ui, sans-serif",
+                    "size": 14,
+                    "color": "#4b5563",
+                },
+                "standoff": 15,
+            },
+            "gridcolor": "#e5e7eb",
+            "gridwidth": 1,
+            "zeroline": False,
+            "showline": True,
+            "linewidth": 2,
+            "linecolor": "#d1d5db",
+            "tickfont": {
+                "family": "Inter, system-ui, sans-serif",
+                "size": 12,
+                "color": "#6b7280",
+            },
         },
         yaxis={
-            "title": {"text": "Success Percentage (%)", "font": {"family": "Inter, system-ui, sans-serif", "size": 14, "color": "#4b5563"}, "standoff": 15},
-            "gridcolor": "#e5e7eb", "gridwidth": 1, "zeroline": False,
-            "showline": True, "linewidth": 2, "linecolor": "#d1d5db",
-            "tickfont": {"family": "Inter, system-ui, sans-serif", "size": 12, "color": "#6b7280"},
+            "title": {
+                "text": "Success Percentage (%)",
+                "font": {
+                    "family": "Inter, system-ui, sans-serif",
+                    "size": 14,
+                    "color": "#4b5563",
+                },
+                "standoff": 15,
+            },
+            "gridcolor": "#e5e7eb",
+            "gridwidth": 1,
+            "zeroline": False,
+            "showline": True,
+            "linewidth": 2,
+            "linecolor": "#d1d5db",
+            "tickfont": {
+                "family": "Inter, system-ui, sans-serif",
+                "size": 12,
+                "color": "#6b7280",
+            },
         },
-        plot_bgcolor="#ffffff", paper_bgcolor="#ffffff", hovermode="closest",
+        plot_bgcolor="#ffffff",
+        paper_bgcolor="#ffffff",
+        hovermode="closest",
         hoverlabel={
-            "bgcolor": "#1f2937", "bordercolor": "#1f2937",
-            "font": {"family": "Inter, system-ui, sans-serif", "size": 13, "color": "#ffffff"},
+            "bgcolor": "#1f2937",
+            "bordercolor": "#1f2937",
+            "font": {
+                "family": "Inter, system-ui, sans-serif",
+                "size": 13,
+                "color": "#ffffff",
+            },
         },
         legend={
-            "orientation": "v", "yanchor": "middle", "y": 0.5, "xanchor": "left", "x": 1.02,
-            "font": {"family": "Inter, system-ui, sans-serif", "size": 11, "color": "#374151"},
-            "bgcolor": "rgba(255, 255, 255, 0.95)", "bordercolor": "#e5e7eb", "borderwidth": 1, "tracegroupgap": 5,
+            "orientation": "v",
+            "yanchor": "middle",
+            "y": 0.5,
+            "xanchor": "left",
+            "x": 1.02,
+            "font": {
+                "family": "Inter, system-ui, sans-serif",
+                "size": 11,
+                "color": "#374151",
+            },
+            "bgcolor": "rgba(255, 255, 255, 0.95)",
+            "bordercolor": "#e5e7eb",
+            "borderwidth": 1,
+            "tracegroupgap": 5,
         },
         margin={"l": 80, "r": 250, "t": 80, "b": 70},
     )
@@ -295,8 +400,11 @@ def _build_and_save_figure(data, incomplete, rewritten, output_path):
             "displaylogo": False,
             "modeBarButtonsToRemove": ["lasso2d", "select2d"],
             "toImageButtonOptions": {
-                "format": "png", "filename": "model_performance",
-                "height": 800, "width": 1400, "scale": 2,
+                "format": "png",
+                "filename": "model_performance",
+                "height": 800,
+                "width": 1400,
+                "scale": 2,
             },
         },
     )

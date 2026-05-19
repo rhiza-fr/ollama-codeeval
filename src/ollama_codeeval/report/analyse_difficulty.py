@@ -6,8 +6,19 @@ from dataclasses import dataclass
 from ollama_codeeval.report.metrics import _classify_error
 
 _CONSTRAINT_SINGLES = frozenset(
-    ["only", "not", "unless", "exactly", "inclusive", "exclusive",
-     "unique", "sorted", "must", "never", "always"]
+    [
+        "only",
+        "not",
+        "unless",
+        "exactly",
+        "inclusive",
+        "exclusive",
+        "unique",
+        "sorted",
+        "must",
+        "never",
+        "always",
+    ]
 )
 
 
@@ -22,10 +33,16 @@ def _prompt_metrics(prompt: str) -> tuple[int, int, int]:
     return chars, n_examples, singles + multi
 
 
-def _label(base_pass_rate: float, rewrite_sensitivity: float, iter1_assertion_rate: float) -> str:
+def _label(
+    base_pass_rate: float, rewrite_sensitivity: float, iter1_assertion_rate: float
+) -> str:
     if rewrite_sensitivity > 0.2 and iter1_assertion_rate > 0.3:
         return "description?"
-    if base_pass_rate < 0.4 and abs(rewrite_sensitivity) < 0.1 and iter1_assertion_rate < 0.2:
+    if (
+        base_pass_rate < 0.4
+        and abs(rewrite_sensitivity) < 0.1
+        and iter1_assertion_rate < 0.2
+    ):
         return "algorithm?"
     return ""
 
@@ -36,16 +53,20 @@ class TaskDifficultySignals:
     prompt_chars: int
     n_examples: int
     constraint_keywords: int
-    base_pass_rate: float        # 0–1
-    rewrite_sensitivity: float   # -1 to 1; 0.0 if no rewrite pairs
+    base_pass_rate: float  # 0–1
+    rewrite_sensitivity: float  # -1 to 1; 0.0 if no rewrite pairs
     iter1_assertion_rate: float  # 0–1
-    label: str                   # "description?" | "algorithm?" | ""
+    label: str  # "description?" | "algorithm?" | ""
 
 
-def compute_difficulty_signals(all_data: list[dict]) -> dict[str, TaskDifficultySignals]:
+def compute_difficulty_signals(
+    all_data: list[dict],
+) -> dict[str, TaskDifficultySignals]:
     """Compute per-task difficulty signals from all_data."""
     base_items = [d for d in all_data if d.get("dataset", "humaneval") == "humaneval"]
-    rewrite_items = [d for d in all_data if d.get("dataset", "humaneval") != "humaneval"]
+    rewrite_items = [
+        d for d in all_data if d.get("dataset", "humaneval") != "humaneval"
+    ]
 
     base_by_key: dict[tuple, dict] = {}
     for d in base_items:
@@ -73,7 +94,9 @@ def compute_difficulty_signals(all_data: list[dict]) -> dict[str, TaskDifficulty
             if iterations:
                 it = iterations[0]
                 tr = it.get("test_result") or {}
-                err = _classify_error(it.get("done_reason"), tr.get("exit_code"), tr.get("stderr", ""))
+                err = _classify_error(
+                    it.get("done_reason"), tr.get("exit_code"), tr.get("stderr", "")
+                )
                 base_iter1_assertion[tid].append(err == "AssertionError")
             else:
                 base_iter1_assertion[tid].append(False)

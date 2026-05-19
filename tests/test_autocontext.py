@@ -1,4 +1,5 @@
 """Tests for AutoContextClient - context/prediction size management."""
+
 from unittest.mock import MagicMock, patch
 
 import pytest

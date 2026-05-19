@@ -19,13 +19,16 @@ def eval(
         1, help="Concurrent problem workers (increase for small models)"
     ),
     dataset: str = typer.Option(
-        "human-eval-enhanced-202307", help="Dataset slug to evaluate (must match a file in data/<slug>.jsonl.gz)"
+        "human-eval-enhanced-202307",
+        help="Dataset slug to evaluate (must match a file in data/<slug>.jsonl.gz)",
     ),
     tag: str = typer.Option(
         None, help="Tag suffix appended to output filename (e.g. 'fixharder-v2')"
     ),
     use_cascade: bool = typer.Option(
-        False, "--cascade", help="Use multi-tier cascade flow (qwen3:4b → qwen2.5-coder → qwen3:14b)"
+        False,
+        "--cascade",
+        help="Use multi-tier cascade flow (qwen3:4b → qwen2.5-coder → qwen3:14b)",
     ),
 ):
     """Run HumanEval evaluation on specified models."""
@@ -84,7 +87,11 @@ def eval(
 
 @app.command()
 def report(
-    no_cache: bool = typer.Option(False, "--no-cache", help="Regenerate all report files even if inputs are unchanged"),
+    no_cache: bool = typer.Option(
+        False,
+        "--no-cache",
+        help="Regenerate all report files even if inputs are unchanged",
+    ),
 ):
     """Generate HTML reports from evaluation results."""
     from ollama_codeeval.config import OUTPUT_BASE

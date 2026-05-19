@@ -16,8 +16,8 @@ class Sandbox:
 
     def __init__(self, lang: str, image: str, execution_timeout: float = 10.0):
         """Initialize a Sandbox instance with the specified language, image, and execution timeout.
-        Args:             lang (str): The programming language to use.             
-        image (str): The Docker image to use for the sandbox.             
+        Args:             lang (str): The programming language to use.
+        image (str): The Docker image to use for the sandbox.
         execution_timeout (float, optional): The maximum time in seconds to allow code execution. Defaults to 10.0."""
         self.lang = lang
         self.image = image

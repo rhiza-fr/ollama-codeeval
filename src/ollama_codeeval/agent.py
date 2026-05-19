@@ -24,7 +24,9 @@ from ollama_codeeval.prompts import _truncate_code, build_fix_prompt
 from ollama_codeeval.pytest_wrapper import consume_test_result, generate_test
 from ollama_codeeval.sandbox import Sandbox
 
-client = AutoContextClient(host=OLLAMA_HOST)  # allows for growth of context window if response is cut off
+client = AutoContextClient(
+    host=OLLAMA_HOST
+)  # allows for growth of context window if response is cut off
 
 cache = Cache(EXECUTION_CACHE_DIR)
 
@@ -35,7 +37,9 @@ def _fail_test_result(msg: str, exit_code: int = 1) -> dict:
 
 def _escalate_temperature(options: dict, iteration_num: int) -> dict:
     options = dict(options)
-    options["temperature"] = min(1.0, options.get("temperature", 0.3) + 0.15 * (iteration_num - 1))
+    options["temperature"] = min(
+        1.0, options.get("temperature", 0.3) + 0.15 * (iteration_num - 1)
+    )
     return options
 
 
@@ -49,6 +53,7 @@ def _detect_stuck(shared: dict, msg: str) -> bool:
         return True
     return False
 
+
 _sandbox: Sandbox | None = None
 
 
@@ -56,7 +61,11 @@ def _get_sandbox() -> Sandbox:
     global _sandbox
     if _sandbox is None:
         try:
-            _sandbox = Sandbox(lang=SANDBOX_LANG, image=SANDBOX_IMAGE, execution_timeout=SANDBOX_TIMEOUT)
+            _sandbox = Sandbox(
+                lang=SANDBOX_LANG,
+                image=SANDBOX_IMAGE,
+                execution_timeout=SANDBOX_TIMEOUT,
+            )
         except Exception as e:
             print(f"Fatal: Error creating Docker Sandbox - is docker running?\n  {e}")
             exit(1)
@@ -106,7 +115,6 @@ class FormatOriginalQuestionNode(Node):
             shared["rewritten_prompt"] = input["prompt"]
 
 
-
 class GenerateNode(Node):
     """Generate node for processing tasks.
 
@@ -137,7 +145,9 @@ class GenerateNode(Node):
         """Update shared context with generation results and return status."""
         shared["iterations"] = list()
         if exec_res is None:
-            shared["iterations"].append({"test_result": _fail_test_result("LLM Initial generation failed")})
+            shared["iterations"].append(
+                {"test_result": _fail_test_result("LLM Initial generation failed")}
+            )
             return "fail"
         result = exec_res.to_dict()
         result["prompt"] = prep_res["prompt"]
@@ -209,8 +219,12 @@ class FixNode(Node):
         entry_point = input.get("entry_point", "")
         error = shared["iterations"][-1]["test_result"]["stderr"]
         error = error.replace("candidate", entry_point)
-        prompt = build_fix_prompt(shared["generated_prompt"], code, error, shared["iterations"])
-        options = _escalate_temperature(shared.get("options", {}), len(shared["iterations"]))
+        prompt = build_fix_prompt(
+            shared["generated_prompt"], code, error, shared["iterations"]
+        )
+        options = _escalate_temperature(
+            shared.get("options", {}), len(shared["iterations"])
+        )
         return CallParams(
             {
                 "prompt": prompt,
@@ -247,7 +261,9 @@ class FixHarderNode(Node):
 
     def prep(self, shared: dict[str, Any]) -> CallParams:
         """Restart with the original prompt, discarding all prior failure context."""
-        options = _escalate_temperature(shared.get("options", {}), len(shared["iterations"]))
+        options = _escalate_temperature(
+            shared.get("options", {}), len(shared["iterations"])
+        )
         return CallParams(
             {
                 "prompt": shared["generated_prompt"],
@@ -296,12 +312,14 @@ class RuffFixNode(Node):
 
     def exec(self, prep_res: str) -> tuple[str, int, str]:
         """Run ruff fix locally, caching results."""
-        key = "ruff_" + hashlib.md5(prep_res.encode(), usedforsecurity=False).hexdigest()
+        key = (
+            "ruff_" + hashlib.md5(prep_res.encode(), usedforsecurity=False).hexdigest()
+        )
         result = cache.get(key)
         if result is None:
             result = ruff_fix(prep_res)
             cache.set(key, result)
-        result = cast(tuple[str,int,str], result)
+        result = cast(tuple[str, int, str], result)
         return result
 
     def post(
@@ -312,7 +330,9 @@ class RuffFixNode(Node):
         shared["iterations"][-1]["ruff_fixed_code"] = fixed_code
         if exit_code == 0:
             return "clean"
-        shared["iterations"][-1]["test_result"] = _fail_test_result(remaining_errors, exit_code)
+        shared["iterations"][-1]["test_result"] = _fail_test_result(
+            remaining_errors, exit_code
+        )
         if len(shared["iterations"]) >= shared["max_iterations"]:
             return "fail"
         return "lint_error"
@@ -412,7 +432,9 @@ def run_flow(test_row: dict, model="qwen3", think=True):
     Returns the shared state after execution."""
     myFlow = create_flow()
     options = {
-        "temperature": 1.0 if model.startswith("gemma4") else MODEL_TEMPERATURE,  # REMOVE ME FOR FAIR TESTING
+        "temperature": 1.0
+        if model.startswith("gemma4")
+        else MODEL_TEMPERATURE,  # REMOVE ME FOR FAIR TESTING
     }
     shared = {
         "input": test_row,

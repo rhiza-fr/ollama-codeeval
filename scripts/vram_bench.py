@@ -14,8 +14,8 @@ from urllib.request import Request, urlopen
 DEFAULT_CTX = [2048, 4096, 8192, 16384]
 DEFAULT_HOST = "http://localhost:11434"
 DEFAULT_OUT = Path("output")
-LOAD_TIMEOUT = 120       # seconds to wait for model to appear in /api/ps
-BENCH_TIMEOUT = 180     # seconds for the benchmark generate call
+LOAD_TIMEOUT = 120  # seconds to wait for model to appear in /api/ps
+BENCH_TIMEOUT = 180  # seconds for the benchmark generate call
 
 BENCH_PROMPT = """\
 Complete the following Python function. Output only the function body, no markdown.
@@ -36,6 +36,7 @@ SKIP_FAMILIES = {"bert", "nomic", "clip"}
 # ---------------------------------------------------------------------------
 # Pure helpers (unit-tested)
 # ---------------------------------------------------------------------------
+
 
 def is_generative(model: dict) -> bool:
     """Return True if model is a generative LLM (not embedding/base)."""
@@ -76,6 +77,7 @@ def calc_toks_per_sec(count: int, duration_ns: int) -> float | None:
 # ---------------------------------------------------------------------------
 # Ollama API
 # ---------------------------------------------------------------------------
+
 
 def api_get(host: str, path: str, timeout: int = 10) -> dict:
     with urlopen(f"{host}{path}", timeout=timeout) as r:  # nosec
@@ -125,26 +127,35 @@ def unload_model(host: str, model: str) -> None:
 
 def load_model(host: str, model: str, ctx: int) -> None:
     """Send a no-op generate to load the model with num_ctx."""
-    api_post(host, "/api/generate", {
-        "model": model,
-        "prompt": "",
-        "num_predict": 0,
-        "keep_alive": "5m",
-        "options": {"num_ctx": ctx},
-        "stream": False,
-    }, timeout=LOAD_TIMEOUT)
-
+    api_post(
+        host,
+        "/api/generate",
+        {
+            "model": model,
+            "prompt": "",
+            "num_predict": 0,
+            "keep_alive": "5m",
+            "options": {"num_ctx": ctx},
+            "stream": False,
+        },
+        timeout=LOAD_TIMEOUT,
+    )
 
 
 def run_benchmark(host: str, model: str, ctx: int) -> dict:
     """Run a generate and return timing stats."""
-    resp = api_post(host, "/api/generate", {
-        "model": model,
-        "prompt": BENCH_PROMPT,
-        "keep_alive": "5m",
-        "options": {"num_ctx": ctx},
-        "stream": False,
-    }, timeout=BENCH_TIMEOUT)
+    resp = api_post(
+        host,
+        "/api/generate",
+        {
+            "model": model,
+            "prompt": BENCH_PROMPT,
+            "keep_alive": "5m",
+            "options": {"num_ctx": ctx},
+            "stream": False,
+        },
+        timeout=BENCH_TIMEOUT,
+    )
     return {
         "prefill_tokens_per_sec": calc_toks_per_sec(
             resp.get("prompt_eval_count", 0),
@@ -163,6 +174,7 @@ def run_benchmark(host: str, model: str, ctx: int) -> dict:
 # VRAM via nvidia-smi
 # ---------------------------------------------------------------------------
 
+
 def query_vram() -> dict[str, int] | None:
     """Query per-GPU used VRAM in MB. Returns None if nvidia-smi unavailable."""
     try:
@@ -175,7 +187,10 @@ def query_vram() -> dict[str, int] | None:
         )
         parsed = parse_nvidia_smi(result.stdout)
         if not parsed and result.stdout.strip():
-            print(f"  [warn] nvidia-smi returned unexpected output: {result.stdout.strip()!r}", file=sys.stderr)
+            print(
+                f"  [warn] nvidia-smi returned unexpected output: {result.stdout.strip()!r}",
+                file=sys.stderr,
+            )
         return parsed or None
     except FileNotFoundError:
         return None
@@ -187,6 +202,7 @@ def query_vram() -> dict[str, int] | None:
 # ---------------------------------------------------------------------------
 # Main sweep
 # ---------------------------------------------------------------------------
+
 
 def bench_model_ctx(host: str, model: str, ctx: int) -> dict:
     """Run one (model, ctx) benchmark. Returns a result record."""
@@ -298,14 +314,32 @@ def run_sweep(
 # CLI
 # ---------------------------------------------------------------------------
 
+
 def parse_args() -> argparse.Namespace:
-    p = argparse.ArgumentParser(description="Benchmark VRAM and tok/s across models and context sizes.")
-    p.add_argument("models", nargs="*", help="Models to benchmark (default: all generative from ollama list)")
-    p.add_argument("--ctx", default=",".join(map(str, DEFAULT_CTX)),
-                   help=f"Comma-separated context sizes (default: {','.join(map(str, DEFAULT_CTX))})")
-    p.add_argument("--host", default=DEFAULT_HOST, help=f"Ollama host (default: {DEFAULT_HOST})")
-    p.add_argument("--out", default=str(DEFAULT_OUT), help="Output directory (default: output/)")
-    p.add_argument("--resume", metavar="FILE", help="Resume from an existing results file, skipping already-done model+ctx pairs")
+    p = argparse.ArgumentParser(
+        description="Benchmark VRAM and tok/s across models and context sizes."
+    )
+    p.add_argument(
+        "models",
+        nargs="*",
+        help="Models to benchmark (default: all generative from ollama list)",
+    )
+    p.add_argument(
+        "--ctx",
+        default=",".join(map(str, DEFAULT_CTX)),
+        help=f"Comma-separated context sizes (default: {','.join(map(str, DEFAULT_CTX))})",
+    )
+    p.add_argument(
+        "--host", default=DEFAULT_HOST, help=f"Ollama host (default: {DEFAULT_HOST})"
+    )
+    p.add_argument(
+        "--out", default=str(DEFAULT_OUT), help="Output directory (default: output/)"
+    )
+    p.add_argument(
+        "--resume",
+        metavar="FILE",
+        help="Resume from an existing results file, skipping already-done model+ctx pairs",
+    )
     return p.parse_args()
 
 

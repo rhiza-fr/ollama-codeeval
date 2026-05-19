@@ -2,7 +2,11 @@
 
 from itertools import permutations
 
-from ollama_codeeval.cascade_optimizer import _vram_mb, cascade_yield_score, model_summary
+from ollama_codeeval.cascade_optimizer import (
+    _vram_mb,
+    cascade_yield_score,
+    model_summary,
+)
 
 
 def print_cascade(
@@ -39,8 +43,8 @@ def print_cascade(
             retro_str = "  n/a "
             retro_flag = "  "
         line = (
-            f"  {i+1:<4} {model:<35} {budget:<4} "
-            f"{stats['pass_rate']*100:>5.1f}%  {marginal:>4}  "
+            f"  {i + 1:<4} {model:<35} {budget:<4} "
+            f"{stats['pass_rate'] * 100:>5.1f}%  {marginal:>4}  "
             f"{stats['cumulative_coverage']}/{total_tasks} ({cov_pct:.1f}%)  "
             f"{avg_t:>6.1f}s  "
             f"{stats.get('load_time_s', 0):>7.1f}s  "
@@ -58,12 +62,18 @@ def print_cascade(
         _, _, last = cascade[-1]
         cov = last["cumulative_coverage"]
         cov_pct = cov / total_tasks * 100 if total_tasks else 0
-        vram_str = f" | VRAM: {last['cumulative_vram_mb']:,} MB" if last.get("cumulative_vram_mb") else ""
+        vram_str = (
+            f" | VRAM: {last['cumulative_vram_mb']:,} MB"
+            if last.get("cumulative_vram_mb")
+            else ""
+        )
         yield_str = ""
         if tau is not None:
             y = cascade_yield_score(cascade, tau, total_tasks)
             yield_str = f" | Yield@τ={tau:.0f}s: {y:.1f}%"
-        print(f"\n  ETCT: {cumulative_etct:.3f}s/task | Coverage: {cov_pct:.1f}% ({cov}/{total_tasks}){vram_str}{yield_str}\n")
+        print(
+            f"\n  ETCT: {cumulative_etct:.3f}s/task | Coverage: {cov_pct:.1f}% ({cov}/{total_tasks}){vram_str}{yield_str}\n"
+        )
 
     print("CASCADE = [")
     for model, budget, _ in cascade:
@@ -119,17 +129,25 @@ def recompute_cascade_stats(
         uncovered -= s["passing_tasks"]
         model_vram = _vram_mb(model, vram_per_model or {})
         cumulative_vram += model_vram or 0
-        cascade.append((model, budget, {
-            "pass_rate": s["pass_rate"],
-            "marginal_tasks": marginal,
-            "cumulative_coverage": len(covered),
-            "avg_time_s": s["avg_time_s"],
-            "n_uncovered": n_uncov,
-            "entry_uncovered": entry_unc,
-            "load_time_s": (model_load_times or {}).get(model, 0.0),
-            "vram_mb": model_vram,
-            "cumulative_vram_mb": cumulative_vram if model_vram is not None else None,
-        }))
+        cascade.append(
+            (
+                model,
+                budget,
+                {
+                    "pass_rate": s["pass_rate"],
+                    "marginal_tasks": marginal,
+                    "cumulative_coverage": len(covered),
+                    "avg_time_s": s["avg_time_s"],
+                    "n_uncovered": n_uncov,
+                    "entry_uncovered": entry_unc,
+                    "load_time_s": (model_load_times or {}).get(model, 0.0),
+                    "vram_mb": model_vram,
+                    "cumulative_vram_mb": cumulative_vram
+                    if model_vram is not None
+                    else None,
+                },
+            )
+        )
     return cascade
 
 
@@ -151,7 +169,11 @@ def prune_harmful_tiers(
         print(f"  Pruning tier {worst_i + 1} ({removed}, retro={worst_r:+.3f}s)")
         remaining = [(m, b) for i, (m, b, _) in enumerate(cascade) if i != worst_i]
         cascade = recompute_cascade_stats(
-            remaining, model_data, all_task_ids, model_load_times, vram_per_model,
+            remaining,
+            model_data,
+            all_task_ids,
+            model_load_times,
+            vram_per_model,
         )
     return cascade
 
@@ -203,9 +225,13 @@ def maximize_last_tier(
     if best_model == last_model and best_budget == last_budget:
         return cascade
 
-    print(f"  Replacing last tier: {last_model} → {best_model} (budget={best_budget}, covers {best_count}/{len(entry_uncov)} entry tasks)")
+    print(
+        f"  Replacing last tier: {last_model} → {best_model} (budget={best_budget}, covers {best_count}/{len(entry_uncov)} entry tasks)"
+    )
     new_mb = [(m, b) for m, b, _ in cascade[:-1]] + [(best_model, best_budget)]
-    return recompute_cascade_stats(new_mb, model_data, all_task_ids, model_load_times, vram_per_model)
+    return recompute_cascade_stats(
+        new_mb, model_data, all_task_ids, model_load_times, vram_per_model
+    )
 
 
 def reorder_cascade_for_yield(
@@ -237,7 +263,9 @@ def reorder_cascade_for_yield(
 
     def _try(mb: list[tuple[str, int]]) -> None:
         nonlocal best, best_yield
-        c = recompute_cascade_stats(mb, model_data, all_task_ids, model_load_times, vram_per_model)
+        c = recompute_cascade_stats(
+            mb, model_data, all_task_ids, model_load_times, vram_per_model
+        )
         if any(s["marginal_tasks"] == 0 for _, _, s in c):
             return  # a tier that solves nothing wastes time for tasks passing through it
         if _etct(c) > target_time:

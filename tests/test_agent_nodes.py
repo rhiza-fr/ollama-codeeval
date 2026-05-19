@@ -1,4 +1,5 @@
 """Tests for agent.py node classes and flow functions."""
+
 from unittest.mock import MagicMock, patch
 
 import ollama_codeeval.agent as agent_module
@@ -91,7 +92,6 @@ class TestFormatOriginalQuestionNode:
         assert "rewritten_prompt" not in shared
 
 
-
 # ---------------------------------------------------------------------------
 # GenerateNode
 # ---------------------------------------------------------------------------
@@ -149,7 +149,10 @@ class TestExecuteNode:
         node = ExecuteNode()
         shared = make_shared()
         shared["iterations"] = [
-            {"message": {"content": ""}, "ruff_fixed_code": "def foo():\n    return None\n"}
+            {
+                "message": {"content": ""},
+                "ruff_fixed_code": "def foo():\n    return None\n",
+            }
         ]
         test = node.prep(shared)
         assert "import pytest" in test
@@ -183,7 +186,8 @@ class TestExecuteNode:
         with patch.object(agent_module, "cache", mock_cache):
             with patch("ollama_codeeval.agent._get_sandbox", return_value=mock_sandbox):
                 with patch(
-                    "ollama_codeeval.agent.consume_test_result", return_value=sandbox_result
+                    "ollama_codeeval.agent.consume_test_result",
+                    return_value=sandbox_result,
                 ):
                     result = node.exec("some test code")
         assert result is sandbox_result
@@ -238,7 +242,11 @@ class TestFixNode:
         iterations = [
             make_iteration(
                 content="def foo():\n    return None\n",
-                test_result={"stderr": "AssertionError: candidate failed", "stdout": "", "exit_code": 1},
+                test_result={
+                    "stderr": "AssertionError: candidate failed",
+                    "stdout": "",
+                    "exit_code": 1,
+                },
             )
             for _ in range(num_iterations)
         ]
@@ -251,7 +259,6 @@ class TestFixNode:
         params = node.prep(shared)
         assert params["model"] == "test-model"
         assert "AssertionError" in params["prompt"] or "foo" in params["prompt"]
-
 
     def test_prep_escalates_temperature(self):
         node = FixNode()
@@ -412,7 +419,11 @@ class TestLintFixNode:
             {
                 "message": {"content": "def foo(): pass"},
                 "ruff_fixed_code": "def foo(): pass",
-                "test_result": {"stderr": "E001 SyntaxError\n  | code\n  |    ^", "stdout": "", "exit_code": 1},
+                "test_result": {
+                    "stderr": "E001 SyntaxError\n  | code\n  |    ^",
+                    "stdout": "",
+                    "exit_code": 1,
+                },
             }
         ]
         params = node.prep(shared)

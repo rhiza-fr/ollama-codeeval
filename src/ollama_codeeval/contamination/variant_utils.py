@@ -52,7 +52,9 @@ def build_check_function(entry_point: str, pairs: list[tuple]) -> str:
         args_str = ", ".join(repr(a) for a in args)
         lines.append(f"    assert candidate({args_str}) == {expected_repr}")
     if len(lines) == 1:
-        raise ValueError("All pairs had oversized expected values; no assertions generated")
+        raise ValueError(
+            "All pairs had oversized expected values; no assertions generated"
+        )
     return "\n".join(lines) + "\n"
 
 
@@ -62,7 +64,21 @@ def extract_function_name(code: str) -> str | None:
     return m.group(1) if m else None
 
 
-_TYPING_NAMES = {"List", "Dict", "Tuple", "Optional", "Set", "FrozenSet", "Union", "Any", "Callable", "Sequence", "Iterator", "Generator", "Type"}
+_TYPING_NAMES = {
+    "List",
+    "Dict",
+    "Tuple",
+    "Optional",
+    "Set",
+    "FrozenSet",
+    "Union",
+    "Any",
+    "Callable",
+    "Sequence",
+    "Iterator",
+    "Generator",
+    "Type",
+}
 
 
 def ensure_typing_imports(code: str) -> str:

@@ -27,9 +27,13 @@ def _analyse_cascade(all_data: list) -> dict:
       - tasks: list of {task_id, total_iters, solving_tier, solving_iter, tier_sequence}
     """
     champion_data = [
-        d for d in all_data
+        d
+        for d in all_data
         if d.get("dataset", "humaneval") == "humaneval"
-        and ((d.get("tag") or "").startswith("cascade") or (d.get("tag") or "").startswith("champion"))
+        and (
+            (d.get("tag") or "").startswith("cascade")
+            or (d.get("tag") or "").startswith("champion")
+        )
     ]
     if not champion_data:
         return {"champion_data": [], "tiers": [], "per_tier": {}, "tasks": []}
@@ -81,14 +85,16 @@ def _analyse_cascade(all_data: list) -> dict:
                         solving_tier = m
                         solving_iter = i + 1  # 1-indexed
 
-            tasks_analysis.append({
-                "task_id": tid,
-                "total_iters": total_iters,
-                "passed": passed,
-                "solving_tier": solving_tier or "\u2014",
-                "solving_iter": solving_iter or 0 if passed else "\u2014",
-                "tier_sequence": " \u2192 ".join(tier_sequence),
-            })
+            tasks_analysis.append(
+                {
+                    "task_id": tid,
+                    "total_iters": total_iters,
+                    "passed": passed,
+                    "solving_tier": solving_tier or "\u2014",
+                    "solving_iter": solving_iter or 0 if passed else "\u2014",
+                    "tier_sequence": " \u2192 ".join(tier_sequence),
+                }
+            )
 
     tasks_analysis.sort(key=lambda t: (not t["passed"], t["total_iters"]))
 
@@ -119,6 +125,7 @@ def generate_cascade_html(all_data: list) -> None:
 
     # ── config section ──
     from ollama_codeeval.cascade_agent import DEFAULT_CASCADE
+
     config_rows = ""
     for i, (model, max_iters) in enumerate(DEFAULT_CASCADE, start=1):
         config_rows += (
@@ -294,8 +301,15 @@ def generate_cascade_html(all_data: list) -> None:
   </table>
 
   <h2>Cascade Runs</h2>
-  {"<p class='note'>No cascade-tagged data found in the evaluation results. Run with <code>--cascade</code> to populate this page.</p>" if no_champ else ""}
-  {"" if no_champ else f'''
+  {
+        "<p class='note'>No cascade-tagged data found in the evaluation results. Run with <code>--cascade</code> to populate this page.</p>"
+        if no_champ
+        else ""
+    }
+  {
+        ""
+        if no_champ
+        else f'''
   <table>
     <thead><tr>
       <th class="sortable">Run</th>
@@ -306,11 +320,15 @@ def generate_cascade_html(all_data: list) -> None:
     </tr></thead>
     <tbody>{champion_overview}</tbody>
   </table>
-  '''}
+  '''
+    }
 
   <h2>Per-Tier Breakdown</h2>
   <p>Fail fast, then escalate.</p>
-  {"<p class='note'>No cascade data to display.</p>" if not tiers else f"""
+  {
+        "<p class='note'>No cascade data to display.</p>"
+        if not tiers
+        else f'''
   <table>
     <thead><tr>
       <th class="sortable">Tier</th>
@@ -321,13 +339,17 @@ def generate_cascade_html(all_data: list) -> None:
     </tr></thead>
     <tbody>{tier_rows}</tbody>
   </table>
-  """}
+  '''
+    }
 
   <h2>Task Details</h2>
   <p>
     Each task's journey through the cascade.
   </p>
-  {"<p class='note'>No tasks to display.</p>" if not tasks_analysis else f"""
+  {
+        "<p class='note'>No tasks to display.</p>"
+        if not tasks_analysis
+        else f'''
   <table>
     <thead><tr>
       <th class="sortable">Task ID</th>
@@ -339,7 +361,8 @@ def generate_cascade_html(all_data: list) -> None:
     </tr></thead>
     <tbody>{task_rows}</tbody>
   </table>
-  """}
+  '''
+    }
 
 </div>
 </body>

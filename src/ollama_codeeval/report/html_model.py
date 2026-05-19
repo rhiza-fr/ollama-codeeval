@@ -23,7 +23,9 @@ from ollama_codeeval.report._shared import (
 )
 
 
-def _full_kde_chart(filtered_data, median, x_min, x_max, color, unit="", bins=30) -> str:
+def _full_kde_chart(
+    filtered_data, median, x_min, x_max, color, unit="", bins=30
+) -> str:
     """Render a full-size inline SVG histogram matching the mini-graph aesthetic."""
     import numpy as np
 
@@ -48,26 +50,27 @@ def _full_kde_chart(filtered_data, median, x_min, x_max, color, unit="", bins=30
         y0 = sy(count)
         bottom = PAD_T + chart_h
         rects += (
-            f'<rect x="{x0:.1f}" y="{y0:.1f}" width="{max(0, x1-x0-1):.1f}" height="{bottom-y0:.1f}"'
+            f'<rect x="{x0:.1f}" y="{y0:.1f}" width="{max(0, x1 - x0 - 1):.1f}" height="{bottom - y0:.1f}"'
             f' fill="{color}" fill-opacity="0.2" stroke="{color}" stroke-opacity="0.5" stroke-width="1"/>'
         )
 
     vx = sx(median)
     bottom = PAD_T + chart_h
-    #fmt = lambda v: f"{v:.1f}{unit}"
-    def fmt(v): 
+
+    # fmt = lambda v: f"{v:.1f}{unit}"
+    def fmt(v):
         return f"{v:.1f}{unit}"
 
     font = "font-size='11' font-family='system-ui,sans-serif'"
 
     return (
         f'<svg viewBox="0 0 {W} {H}" style="width:100%;height:{H}px;display:block;">'
-        f'{rects}'
+        f"{rects}"
         f'<line x1="{vx:.1f}" y1="{PAD_T}" x2="{vx:.1f}" y2="{bottom}" stroke="{color}" stroke-width="2"/>'
-        f'<text x="{PAD_L}" y="{H-4}" {font} fill="#94a3b8">{html.escape(fmt(x_min))}</text>'
-        f'<text x="{W-PAD_R}" y="{H-4}" {font} fill="#94a3b8" text-anchor="end">{html.escape(fmt(x_max))}</text>'
-        f'<text x="{vx+4:.1f}" y="{PAD_T+10}" {font} fill="{color}" text-anchor="start">median {html.escape(fmt(median))}</text>'
-        f'</svg>'
+        f'<text x="{PAD_L}" y="{H - 4}" {font} fill="#94a3b8">{html.escape(fmt(x_min))}</text>'
+        f'<text x="{W - PAD_R}" y="{H - 4}" {font} fill="#94a3b8" text-anchor="end">{html.escape(fmt(x_max))}</text>'
+        f'<text x="{vx + 4:.1f}" y="{PAD_T + 10}" {font} fill="{color}" text-anchor="start">median {html.escape(fmt(median))}</text>'
+        f"</svg>"
     )
 
 
@@ -116,7 +119,9 @@ def _fmt_duration(seconds: float) -> str:
 
 def _natural_sort_key(task):
     task_id = task["input"]["task_id"]
-    return [int(part) if part.isdigit() else part for part in re.split(r"(\d+)", task_id)]
+    return [
+        int(part) if part.isdigit() else part for part in re.split(r"(\d+)", task_id)
+    ]
 
 
 def _load_vram_bench() -> dict[str, list[dict]] | None:
@@ -157,23 +162,31 @@ def _badges_for_model(model_name: str) -> str:
 
     # Parameter size
     if entry and entry.get("parameter_size"):
-        badges.append(f'<span class="info-badge" title="Parameter size">{html.escape(entry["parameter_size"])}</span>')
+        badges.append(
+            f'<span class="info-badge" title="Parameter size">{html.escape(entry["parameter_size"])}</span>'
+        )
 
     # Quantization
     if entry and entry.get("quantization_level"):
-        badges.append(f'<span class="info-badge" title="Quantization">{html.escape(entry["quantization_level"])}</span>')
+        badges.append(
+            f'<span class="info-badge" title="Quantization">{html.escape(entry["quantization_level"])}</span>'
+        )
 
     # Capabilities
     if entry:
         caps = entry.get("capabilities") or []
         if caps:
-            badges.append(f'<span class="info-badge info-badge--caps" title="Capabilities">{html.escape(", ".join(caps))}</span>')
+            badges.append(
+                f'<span class="info-badge info-badge--caps" title="Capabilities">{html.escape(", ".join(caps))}</span>'
+            )
 
     # Abbreviated digest
     if entry and entry.get("digest"):
         digest = entry["digest"]
         short = digest[:8] + "…" + digest[-4:]
-        badges.append(f'<span class="info-badge info-badge--mono" title="Digest: {html.escape(digest)}">sha256:{html.escape(short)}</span>')
+        badges.append(
+            f'<span class="info-badge info-badge--mono" title="Digest: {html.escape(digest)}">sha256:{html.escape(short)}</span>'
+        )
 
     # VRAM and speed from vram bench
     vram_entries = vram.get(model_name, [])
@@ -182,17 +195,31 @@ def _badges_for_model(model_name: str) -> str:
         min_ctx = min(vram_entries, key=lambda e: e.get("ctx", 999999))
         vram_mb = min_ctx.get("ollama_size_vram_mb")
         if vram_mb:
-            badges.append(f'<span class="info-badge" title="Ollama-reported VRAM at ctx={min_ctx["ctx"]}">VRAM: {vram_mb / 1024:.2f} GB</span>')
+            badges.append(
+                f'<span class="info-badge" title="Ollama-reported VRAM at ctx={min_ctx["ctx"]}">VRAM: {vram_mb / 1024:.2f} GB</span>'
+            )
 
         # Average prefill and decode across all context sizes
-        prefill_vals = [e["prefill_tokens_per_sec"] for e in vram_entries if e.get("prefill_tokens_per_sec")]
-        decode_vals = [e["decode_tokens_per_sec"] for e in vram_entries if e.get("decode_tokens_per_sec")]
+        prefill_vals = [
+            e["prefill_tokens_per_sec"]
+            for e in vram_entries
+            if e.get("prefill_tokens_per_sec")
+        ]
+        decode_vals = [
+            e["decode_tokens_per_sec"]
+            for e in vram_entries
+            if e.get("decode_tokens_per_sec")
+        ]
         if prefill_vals:
             avg_pre = sum(prefill_vals) / len(prefill_vals)
-            badges.append(f'<span class="info-badge" title="Avg prefill speed">Prefill: {avg_pre:.0f} tok/s</span>')
+            badges.append(
+                f'<span class="info-badge" title="Avg prefill speed">Prefill: {avg_pre:.0f} tok/s</span>'
+            )
         if decode_vals:
             avg_dec = sum(decode_vals) / len(decode_vals)
-            badges.append(f'<span class="info-badge" title="Avg decode speed">Decode: {avg_dec:.1f} tok/s</span>')
+            badges.append(
+                f'<span class="info-badge" title="Avg decode speed">Decode: {avg_dec:.1f} tok/s</span>'
+            )
 
     return " ".join(badges)
 
@@ -229,11 +256,17 @@ def _model_info_header(summary_data: dict, jsonl_file: str | Path) -> str:
         for i, m in enumerate(models):
             badges = _badges_for_model(m)
             if not badges:
-                badge_html = f'<span class="info-badge">no data for {html.escape(m)}</span>'
+                badge_html = (
+                    f'<span class="info-badge">no data for {html.escape(m)}</span>'
+                )
             else:
                 badge_html = badges
             tier_label = f"Tier {i + 1}: {html.escape(m)}" if len(models) > 1 else ""
-            label_html = f'<span class="info-model-name">{tier_label}</span>' if tier_label else ""
+            label_html = (
+                f'<span class="info-model-name">{tier_label}</span>'
+                if tier_label
+                else ""
+            )
             lines.append(f'<div class="model-info">{label_html} {badge_html}</div>')
         return "\n".join(lines)
     else:
@@ -250,7 +283,8 @@ def generate_task_html(task):
     generated_prompt = html.escape(task["generated_prompt"])
     # New flow: original_input_prompt in input dict; old flow: rewritten_prompt at top level
     rewritten_prompt = (
-        task["input"]["prompt"] if task["input"].get("original_input_prompt")
+        task["input"]["prompt"]
+        if task["input"].get("original_input_prompt")
         else task.get("rewritten_prompt")
     )
     input_canonical_solution = html.escape(task["input"]["canonical_solution"])
@@ -334,7 +368,7 @@ def generate_task_html(task):
         dataset_name = html.escape(task.get("dataset", ""))
         rewrite_html = f"""
         <details>
-          <summary>Rewritten Prompt{f' ({dataset_name})' if dataset_name else ''}</summary>
+          <summary>Rewritten Prompt{f" ({dataset_name})" if dataset_name else ""}</summary>
           <pre><code>{escaped_rewrite}</code></pre>
         </details>"""
     rewrite_badge = (
@@ -369,11 +403,16 @@ def generate_task_html(task):
     """
 
 
-def generate_individual_html(jsonl_file, summary_data, no_cache=False, distributions=None):
+def generate_individual_html(
+    jsonl_file, summary_data, no_cache=False, distributions=None
+):
     html_file_name = Path(jsonl_file).with_suffix(".html").name
     if not no_cache:
         html_path = OUTPUT_DIR / html_file_name
-        if html_path.exists() and html_path.stat().st_mtime > Path(jsonl_file).stat().st_mtime:
+        if (
+            html_path.exists()
+            and html_path.stat().st_mtime > Path(jsonl_file).stat().st_mtime
+        ):
             return html_file_name
 
     tasks = summary_data["tasks"]
@@ -398,22 +437,32 @@ def generate_individual_html(jsonl_file, summary_data, no_cache=False, distribut
         estimator = KDEEstimator(durations)
         estimator.filter_outliers()
         times_kde_html = _full_kde_chart(
-            estimator.filtered_data, estimator.raw_median,
-            min(durations), max(durations), "#d97706", unit="s",
+            estimator.filtered_data,
+            estimator.raw_median,
+            min(durations),
+            max(durations),
+            "#d97706",
+            unit="s",
         )
     if lengths:
         estimator2 = KDEEstimator(lengths)
         estimator2.filter_outliers()
         lengths_kde_html = _full_kde_chart(
-            estimator2.filtered_data, estimator2.raw_median,
-            min(lengths), max(lengths), "#2563eb", unit=" tok",
+            estimator2.filtered_data,
+            estimator2.raw_median,
+            min(lengths),
+            max(lengths),
+            "#2563eb",
+            unit=" tok",
         )
 
     error_counts = summary_data.get("error_counts", {})
     filtered_errors = {k: v for k, v in error_counts.items() if v > 0}
     error_chart_html = ""
     if filtered_errors:
-        sorted_errors = sorted(filtered_errors.items(), key=lambda item: item[1], reverse=True)
+        sorted_errors = sorted(
+            filtered_errors.items(), key=lambda item: item[1], reverse=True
+        )
         labels = [item[0] for item in sorted_errors]
         values = [item[1] for item in sorted_errors]
         chart_height = max(180, len(labels) * 28 + 40)
@@ -507,16 +556,16 @@ def generate_individual_html(jsonl_file, summary_data, no_cache=False, distribut
                     f'<div style="flex:1;min-width:280px;background:#fff;border-radius:8px;'
                     f'box-shadow:0 1px 3px rgba(0,0,0,.12);padding:1rem 1.5rem;">'
                     f'<div class="stat-label">Response Time Distribution</div>'
-                    f'{times_kde_html}</div>'
+                    f"{times_kde_html}</div>"
                 )
             if lengths_kde_html:
                 f.write(
                     f'<div style="flex:1;min-width:280px;background:#fff;border-radius:8px;'
                     f'box-shadow:0 1px 3px rgba(0,0,0,.12);padding:1rem 1.5rem;">'
                     f'<div class="stat-label">Token Count Distribution</div>'
-                    f'{lengths_kde_html}</div>'
+                    f"{lengths_kde_html}</div>"
                 )
-            f.write('</div>')
+            f.write("</div>")
         for task in sorted(tasks, key=_natural_sort_key):
             f.write(generate_task_html(task))
         f.write("\n</div>\n</body>\n</html>\n")

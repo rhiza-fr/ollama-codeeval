@@ -5,7 +5,15 @@ import math
 from pathlib import Path
 
 from ollama_codeeval.config import OUTPUT_BASE
-from ollama_codeeval.report._shared import CSS_BLOCK, HEAD_META, OUTPUT_DIR, _nav_html, load_model_stats, resolve_model_name, tag_display_name
+from ollama_codeeval.report._shared import (
+    CSS_BLOCK,
+    HEAD_META,
+    OUTPUT_DIR,
+    _nav_html,
+    load_model_stats,
+    resolve_model_name,
+    tag_display_name,
+)
 
 _VRAM_BENCH_GLOB = "vram_bench_*.json"
 _TAU_MIN = 0.5
@@ -52,7 +60,9 @@ def _task_solve_times(tasks: list) -> list[float]:
     """Per-task total elapsed seconds for successful tasks only."""
     times = []
     for t in tasks:
-        elapsed = sum(it.get("total_duration") or 0 for it in t.get("iterations", [])) / 1e9
+        elapsed = (
+            sum(it.get("total_duration") or 0 for it in t.get("iterations", [])) / 1e9
+        )
         if t["final_result"]["exit_code"] == 0:
             times.append(elapsed)
     return times
@@ -86,21 +96,30 @@ def generate_selector_html(all_data: list) -> None:
         pass_rate = d["passed_tests"] / total * 100
         display = tag_display_name(d) + (" (think)" if think else "")
         html_file = Path(d["file"]).with_suffix(".html").name
-        rows.append({
-            "name": display,
-            "html_file": html_file,
-            "params": params_by_resolved.get(d["model"]),
-            "tools": tools_by_resolved.get(d["model"], False),
-            "pass_rate": round(pass_rate, 2),
-            "avg_time_s": round(d.get("average_time_per_iteration", 0), 3),
-            "vram_mb": round(vram_mb) if vram_mb is not None else None,
-            "times": [round(t, 3) for t in times],
-            "total": total,
-        })
+        rows.append(
+            {
+                "name": display,
+                "html_file": html_file,
+                "params": params_by_resolved.get(d["model"]),
+                "tools": tools_by_resolved.get(d["model"], False),
+                "pass_rate": round(pass_rate, 2),
+                "avg_time_s": round(d.get("average_time_per_iteration", 0), 3),
+                "vram_mb": round(vram_mb) if vram_mb is not None else None,
+                "times": [round(t, 3) for t in times],
+                "total": total,
+            }
+        )
 
-    max_vram_gb = math.ceil(
-        max((m["vram_mb"] / 1024 for m in rows if m["vram_mb"] is not None), default=28) / 2
-    ) * 2
+    max_vram_gb = (
+        math.ceil(
+            max(
+                (m["vram_mb"] / 1024 for m in rows if m["vram_mb"] is not None),
+                default=28,
+            )
+            / 2
+        )
+        * 2
+    )
     default_tau_slider = round(
         100 * math.log(_DEFAULT_TAU / _TAU_MIN) / math.log(_TAU_MAX / _TAU_MIN)
     )

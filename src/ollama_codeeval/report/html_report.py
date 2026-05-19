@@ -30,7 +30,14 @@ logging.basicConfig(
 log = logging.getLogger(__name__)
 
 # Re-exported for consumers that import these names from this module (e.g. html_tasks)
-__all__ = ["CSS_BLOCK", "HLJS_BLOCK", "OUTPUT_DIR", "SORT_SCRIPT", "ns_to_seconds", "sanitize_task_id"]
+__all__ = [
+    "CSS_BLOCK",
+    "HLJS_BLOCK",
+    "OUTPUT_DIR",
+    "SORT_SCRIPT",
+    "ns_to_seconds",
+    "sanitize_task_id",
+]
 
 
 def get_all_data(no_cache=False):

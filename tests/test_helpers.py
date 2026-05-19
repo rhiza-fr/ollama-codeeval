@@ -174,12 +174,16 @@ class TestCleanTestOutput:
 
 class TestConsumeTestResult:
     def test_passes_stderr_through(self):
-        result = consume_test_result({"stderr": "real error", "stdout": "", "exit_code": 1})
+        result = consume_test_result(
+            {"stderr": "real error", "stdout": "", "exit_code": 1}
+        )
         assert result["stderr"] == "real error"
         assert result["exit_code"] == 1
 
     def test_passing_test_clears_output(self):
-        result = consume_test_result({"stderr": "", "stdout": "1 passed in 0.01s", "exit_code": 0})
+        result = consume_test_result(
+            {"stderr": "", "stdout": "1 passed in 0.01s", "exit_code": 0}
+        )
         assert result["stderr"] == ""
         assert result["exit_code"] == 0
 

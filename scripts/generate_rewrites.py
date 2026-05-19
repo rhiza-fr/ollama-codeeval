@@ -38,7 +38,9 @@ DATA_DIR = Path(__file__).parent.parent / "data"
 
 def slugify(value: str) -> str:
     value = str(value)
-    value = unicodedata.normalize("NFKD", value).encode("ascii", "ignore").decode("ascii")
+    value = (
+        unicodedata.normalize("NFKD", value).encode("ascii", "ignore").decode("ascii")
+    )
     value = re.sub(r"[^\w\s.-]", "", value.lower())
     value = value.replace(".", "p")
     return re.sub(r"[-\s]+", "-", value).strip("-_")
@@ -46,9 +48,16 @@ def slugify(value: str) -> str:
 
 def main():
     parser = argparse.ArgumentParser(description="Generate rewritten HumanEval dataset")
-    parser.add_argument("--model", required=True, help="Ollama model to use for rewriting")
+    parser.add_argument(
+        "--model", required=True, help="Ollama model to use for rewriting"
+    )
     parser.add_argument("--think", action="store_true", help="Enable thinking mode")
-    parser.add_argument("--output", type=Path, default=None, help="Output path (default: data/humaneval-rewritten-{model}.jsonl.gz)")
+    parser.add_argument(
+        "--output",
+        type=Path,
+        default=None,
+        help="Output path (default: data/humaneval-rewritten-{model}.jsonl.gz)",
+    )
     args = parser.parse_args()
 
     model_slug = slugify(args.model)
@@ -60,14 +69,18 @@ def main():
     client = AutoContextClient(host=OLLAMA_HOST)
 
     # Find which tasks are missing from cache
-    missing = [r for r in dataset if not cache.get(f"rewrite_{args.model}_{r['task_id']}")]
+    missing = [
+        r for r in dataset if not cache.get(f"rewrite_{args.model}_{r['task_id']}")
+    ]
 
     if missing:
         print(f"Generating {len(missing)} rewrites with {args.model} ...")
         client.call(args.model, "Say hello.", think=False, options={})
         for i, row in enumerate(missing, 1):
             prompt = REWRITE_SYSTEM_PROMPT.format(question=row["prompt"])
-            response = client.call(args.model, prompt, think=args.think, options={"temperature": 0.3})
+            response = client.call(
+                args.model, prompt, think=args.think, options={"temperature": 0.3}
+            )
             rewritten = response.to_dict()["message"]["content"]
             cache.set(f"rewrite_{args.model}_{row['task_id']}", rewritten)
             print(f"  [{i}/{len(missing)}] {row['task_id']}")
@@ -81,7 +94,9 @@ def main():
         for row in dataset:
             rewritten = cache.get(f"rewrite_{args.model}_{row['task_id']}")
             if not rewritten:
-                print(f"WARNING: no cached rewrite for {row['task_id']}, using original prompt")
+                print(
+                    f"WARNING: no cached rewrite for {row['task_id']}, using original prompt"
+                )
                 rewritten = row["prompt"]
             out_row = dict(row)
             out_row["original_input_prompt"] = row["prompt"]

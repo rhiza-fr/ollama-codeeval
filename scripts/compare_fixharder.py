@@ -79,7 +79,9 @@ def compare(output_dir: str, tag: str, verbose: bool) -> None:
         print(f"No tagged files found in '{output_dir}' with tag '{tag}'.")
         return
 
-    print(f"\n{'Model':<40} {'All tasks':>18}  {'FH pool':>12}  {'Genuine':>8}  {'Lucky':>6}  {'Regressed':>10}")
+    print(
+        f"\n{'Model':<40} {'All tasks':>18}  {'FH pool':>12}  {'Genuine':>8}  {'Lucky':>6}  {'Regressed':>10}"
+    )
     print("-" * 102)
 
     total_genuine = total_lucky = total_regressed = total_fh = 0
@@ -99,21 +101,24 @@ def compare(output_dir: str, tag: str, verbose: bool) -> None:
 
         # Genuine fix: was failing in baseline, new run also hit FH (prompt fired), now passes
         genuine = [
-            t for t in fh_tasks
+            t
+            for t in fh_tasks
             if not baseline[t]["pass"]
             and new.get(t, {}).get("hit_fixharder", False)
             and new.get(t, {}).get("pass", False)
         ]
         # Lucky fix: was failing in baseline, new run did NOT hit FH (solved before reaching it)
         lucky = [
-            t for t in fh_tasks
+            t
+            for t in fh_tasks
             if not baseline[t]["pass"]
             and not new.get(t, {}).get("hit_fixharder", False)
             and new.get(t, {}).get("pass", False)
         ]
         # Regression: was passing in baseline, now failing (regardless of FH in new run)
         regressions = [
-            t for t in fh_tasks
+            t
+            for t in fh_tasks
             if baseline[t]["pass"] and not new.get(t, {}).get("pass", True)
         ]
 
@@ -125,7 +130,9 @@ def compare(output_dir: str, tag: str, verbose: bool) -> None:
         all_str = f"{b_all}/{n_total} -> {n_all}/{n_total}"
         fh_str = f"{b_fh}/{fh_total} -> {n_fh}/{fh_total}" if fh_total else "none"
 
-        print(f"{label:<40} {all_str:>18}  {fh_str:>12}  {len(genuine):>8}  {len(lucky):>6}  {len(regressions):>10}")
+        print(
+            f"{label:<40} {all_str:>18}  {fh_str:>12}  {len(genuine):>8}  {len(lucky):>6}  {len(regressions):>10}"
+        )
 
         if verbose and fh_tasks:
             if genuine:
@@ -136,7 +143,9 @@ def compare(output_dir: str, tag: str, verbose: bool) -> None:
                 print(f"  - regressed: {', '.join(regressions)}")
 
     print("-" * 102)
-    print(f"{'TOTAL across ' + str(total_fh) + ' FH tasks':<40} {'':>18}  {'':>12}  {total_genuine:>8}  {total_lucky:>6}  {total_regressed:>10}")
+    print(
+        f"{'TOTAL across ' + str(total_fh) + ' FH tasks':<40} {'':>18}  {'':>12}  {total_genuine:>8}  {total_lucky:>6}  {total_regressed:>10}"
+    )
     print()
     print(f"  Genuine fixes (prompt attributable): {total_genuine}")
     print(f"  Lucky fixes   (re-sample noise):     {total_lucky}")
@@ -150,6 +159,7 @@ def compare(output_dir: str, tag: str, verbose: bool) -> None:
 def top_stuck_models(output_dir: str, exclude_tag: str | None = None) -> None:
     """Print models ranked by how many tasks hit FixHarderNode (helps pick re-run targets)."""
     from collections import Counter
+
     counts: Counter = Counter()
     pattern = str(Path(output_dir) / "results_*.jsonl")
     for path in sorted(glob.glob(pattern)):
@@ -176,11 +186,25 @@ def top_stuck_models(output_dir: str, exclude_tag: str | None = None) -> None:
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--tag", default="fixharder-v2", help="Tag suffix used when running new evals")
-    parser.add_argument("--output-dir", default="output", help="Directory containing JSONL result files")
-    parser.add_argument("--verbose", action="store_true", help="Show per-task genuine/lucky/regressed lists")
-    parser.add_argument("--rank", action="store_true", help="Show models ranked by FixHarder trigger count (no tag needed)")
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    parser.add_argument(
+        "--tag", default="fixharder-v2", help="Tag suffix used when running new evals"
+    )
+    parser.add_argument(
+        "--output-dir", default="output", help="Directory containing JSONL result files"
+    )
+    parser.add_argument(
+        "--verbose",
+        action="store_true",
+        help="Show per-task genuine/lucky/regressed lists",
+    )
+    parser.add_argument(
+        "--rank",
+        action="store_true",
+        help="Show models ranked by FixHarder trigger count (no tag needed)",
+    )
     args = parser.parse_args()
 
     if args.rank:

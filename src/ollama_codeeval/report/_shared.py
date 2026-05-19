@@ -14,10 +14,13 @@ def compute_yield(tasks: list) -> float:
         return 0.0
     total = 0.0
     for t in tasks:
-        elapsed = sum(it.get("total_duration") or 0 for it in t.get("iterations", [])) / 1e9
+        elapsed = (
+            sum(it.get("total_duration") or 0 for it in t.get("iterations", [])) / 1e9
+        )
         if t["final_result"]["exit_code"] == 0:
             total += 1.0 / (1.0 + elapsed / CANONICAL_TAU)
     return total / N
+
 
 OUTPUT_DIR = OUTPUT_HTML
 _STATIC_DIR = Path(__file__).parent
@@ -72,8 +75,14 @@ def load_model_stats() -> dict | None:
 
 
 HEAD_META = '<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">'
-CSS_BLOCK = "<style>\n" + (_STATIC_DIR / "report.css").read_text(encoding="utf-8") + "\n</style>"
-SORT_SCRIPT = "<script>\n" + (_STATIC_DIR / "sort.js").read_text(encoding="utf-8") + "\n</script>"
+CSS_BLOCK = (
+    "<style>\n"
+    + (_STATIC_DIR / "report.css").read_text(encoding="utf-8")
+    + "\n</style>"
+)
+SORT_SCRIPT = (
+    "<script>\n" + (_STATIC_DIR / "sort.js").read_text(encoding="utf-8") + "\n</script>"
+)
 HLJS_BLOCK = (
     '<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/default.min.css">\n'
     '<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>\n'
@@ -83,6 +92,7 @@ HLJS_BLOCK = (
 
 def _nav_html(current: str) -> str:
     """Return sticky top-nav HTML. current is one of: 'index', 'tasks', 'context', 'model'."""
+
     def _link(href: str, label: str, key: str) -> str:
         cls = ' class="active"' if key == current else ""
         return f'<a href="{href}"{cls}>{label}</a>'
@@ -144,12 +154,15 @@ def expandable_code_html(s: str, lang: str = "language-python") -> str:
     """Return HTML for a <code> block plus expand controls outside it.
     Caller should wrap in <pre>…</pre> only — do NOT add <code> tags around this."""
     import html as _html
+
     if len(s) <= _DISPLAY_TRUNCATE_LIMIT:
         return f'<code class="{lang}">{_html.escape(s)}</code>'
     overflow = len(s) - _DISPLAY_TRUNCATE_LIMIT
     trunc_text = s[:_DISPLAY_TRUNCATE_LIMIT]
     rest_text = s[_DISPLAY_TRUNCATE_LIMIT:]
-    trunc_attr = _html.escape(trunc_text)   # safe in data-* attribute (escapes &, <, >, ")
+    trunc_attr = _html.escape(
+        trunc_text
+    )  # safe in data-* attribute (escapes &, <, >, ")
     rest_attr = _html.escape(rest_text)
     return (
         f'<code class="{lang}">{trunc_attr}</code>'
@@ -160,7 +173,10 @@ def expandable_code_html(s: str, lang: str = "language-python") -> str:
 
 def truncate_str(s: str) -> str:
     if len(s) > _DISPLAY_TRUNCATE_LIMIT:
-        return s[:_DISPLAY_TRUNCATE_LIMIT] + f" [truncated {len(s) - _DISPLAY_TRUNCATE_LIMIT} characters]"
+        return (
+            s[:_DISPLAY_TRUNCATE_LIMIT]
+            + f" [truncated {len(s) - _DISPLAY_TRUNCATE_LIMIT} characters]"
+        )
     return s
 
 

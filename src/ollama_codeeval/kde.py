@@ -44,7 +44,12 @@ class KDEEstimator:
         self.y_density = self.kde(self.x_eval)
 
     def plot(self, output_file=None, label="KDE"):
-        if self.x_eval is None or self.y_density is None or self.filtered_data is None or self.raw_median is None:
+        if (
+            self.x_eval is None
+            or self.y_density is None
+            or self.filtered_data is None
+            or self.raw_median is None
+        ):
             raise ValueError("Fit KDE before plotting.")
         plt.figure(figsize=(10, 6))
         plt.hist(

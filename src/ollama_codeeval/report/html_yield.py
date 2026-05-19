@@ -1,20 +1,20 @@
 """Yield Explorer page — interactive τ (half-credit time) sensitivity chart.
 
 
-                                                                                                                                                                                                                                                                                                                                                                                     
-  ┌─────────────────────────────────────┬──────────┬──────────────────────────────────────────────────────┐
-  │              Use case               │    τ     │                      Reasoning                       │
-  ├─────────────────────────────────────┼──────────┼──────────────────────────────────────────────────────┤
-  │ Inline autocomplete / Copilot-style │ 1-3 s    │ User pauses ~1s; anything beyond 3s breaks flow      │
-  ├─────────────────────────────────────┼──────────┼──────────────────────────────────────────────────────┤
-  │ Interactive REPL / chat iteration   │ 10-30 s  │ A 30s wait is annoying but acceptable once per query │
-  ├─────────────────────────────────────┼──────────┼──────────────────────────────────────────────────────┤
-  │ CLI tool / pre-commit hook          │ 30-120 s │ You switched context; 1-2 min is tolerable           │
-  ├─────────────────────────────────────┼──────────┼──────────────────────────────────────────────────────┤
-  │ CI pipeline step                    │ 2-10 min │ Batched anyway; you're not watching                  │
-  ├─────────────────────────────────────┼──────────┼──────────────────────────────────────────────────────┤
-  │ Overnight batch job                 │ τ → ∞    │ Speed irrelevant; yield → raw accuracy               │
-  └─────────────────────────────────────┴──────────┴──────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────┬──────────┬──────────────────────────────────────────────────────┐
+│              Use case               │    τ     │                      Reasoning                       │
+├─────────────────────────────────────┼──────────┼──────────────────────────────────────────────────────┤
+│ Inline autocomplete / Copilot-style │ 1-3 s    │ User pauses ~1s; anything beyond 3s breaks flow      │
+├─────────────────────────────────────┼──────────┼──────────────────────────────────────────────────────┤
+│ Interactive REPL / chat iteration   │ 10-30 s  │ A 30s wait is annoying but acceptable once per query │
+├─────────────────────────────────────┼──────────┼──────────────────────────────────────────────────────┤
+│ CLI tool / pre-commit hook          │ 30-120 s │ You switched context; 1-2 min is tolerable           │
+├─────────────────────────────────────┼──────────┼──────────────────────────────────────────────────────┤
+│ CI pipeline step                    │ 2-10 min │ Batched anyway; you're not watching                  │
+├─────────────────────────────────────┼──────────┼──────────────────────────────────────────────────────┤
+│ Overnight batch job                 │ τ → ∞    │ Speed irrelevant; yield → raw accuracy               │
+└─────────────────────────────────────┴──────────┴──────────────────────────────────────────────────────┘
 
 """
 
@@ -46,7 +46,9 @@ def _model_yield(tasks: list, tau: float) -> float:
         return 0.0
     total = 0.0
     for t in tasks:
-        elapsed = sum(it.get("total_duration") or 0 for it in t.get("iterations", [])) / 1e9
+        elapsed = (
+            sum(it.get("total_duration") or 0 for it in t.get("iterations", [])) / 1e9
+        )
         if t["final_result"]["exit_code"] == 0:
             total += 1.0 / (1.0 + elapsed / tau)
     return total / N * 100
@@ -61,8 +63,7 @@ def _tau_label(tau: float) -> str:
 def generate_yield_html(all_data: list) -> None:
     models = [d for d in all_data if d.get("dataset", "humaneval") == "humaneval"]
     labels = [
-        tag_display_name(d) + (" (think)" if d.get("think") else "")
-        for d in models
+        tag_display_name(d) + (" (think)" if d.get("think") else "") for d in models
     ]
 
     tau_values: list[float] = np.logspace(
@@ -71,13 +72,16 @@ def generate_yield_html(all_data: list) -> None:
 
     # yields_matrix[tau_idx][model_idx]
     yields_matrix = [
-        [_model_yield(m["tasks"], tau) for m in models]
-        for tau in tau_values
+        [_model_yield(m["tasks"], tau) for m in models] for tau in tau_values
     ]
 
     # Fix model order by yield at default τ, descending
-    default_idx = min(range(len(tau_values)), key=lambda i: abs(tau_values[i] - _DEFAULT_TAU))
-    order = sorted(range(len(models)), key=lambda i: yields_matrix[default_idx][i], reverse=True)
+    default_idx = min(
+        range(len(tau_values)), key=lambda i: abs(tau_values[i] - _DEFAULT_TAU)
+    )
+    order = sorted(
+        range(len(models)), key=lambda i: yields_matrix[default_idx][i], reverse=True
+    )
     sorted_labels = [labels[i] for i in order]
     sorted_matrix = [[row[i] for i in order] for row in yields_matrix]
 
@@ -86,7 +90,11 @@ def generate_yield_html(all_data: list) -> None:
         tasks = m["tasks"]
         if not tasks:
             return 0.0
-        return sum(1 for t in tasks if t["final_result"]["exit_code"] == 0) / len(tasks) * 100
+        return (
+            sum(1 for t in tasks if t["final_result"]["exit_code"] == 0)
+            / len(tasks)
+            * 100
+        )
 
     sorted_accuracy = [_accuracy(models[i]) for i in order]
 
@@ -122,9 +130,13 @@ def generate_yield_html(all_data: list) -> None:
     _LEADERBOARD_TAUS = [3.0, _DEFAULT_TAU, 30.0, 240.0]
 
     def _leaderboard_table(tau_target: float) -> str:
-        t_idx = min(range(len(tau_values)), key=lambda i: abs(tau_values[i] - tau_target))
+        t_idx = min(
+            range(len(tau_values)), key=lambda i: abs(tau_values[i] - tau_target)
+        )
         rows = sorted(
-            zip(sorted_labels, sorted_matrix[t_idx], sorted_accuracy, sorted_median_time),
+            zip(
+                sorted_labels, sorted_matrix[t_idx], sorted_accuracy, sorted_median_time
+            ),
             key=lambda x: x[1],
             reverse=True,
         )

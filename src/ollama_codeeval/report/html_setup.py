@@ -16,6 +16,7 @@ from ollama_codeeval.report._shared import (
 def _load_system_profile() -> dict | None:
     """Load output/system_profile.json if it exists."""
     from ollama_codeeval.config import OUTPUT_BASE
+
     path = OUTPUT_BASE / "system_profile.json"
     if not path.exists():
         return None
@@ -25,6 +26,7 @@ def _load_system_profile() -> dict | None:
 def _load_model_stats() -> dict | None:
     """Load output/model_stats.json if it exists."""
     from ollama_codeeval.config import OUTPUT_BASE
+
     path = OUTPUT_BASE / "model_stats.json"
     if not path.exists():
         return None
@@ -152,6 +154,7 @@ _FLOW_SVG = """<?xml version="1.0"?>
 # Config defaults table
 # ---------------------------------------------------------------------------
 
+
 def _config_rows() -> str:
     from ollama_codeeval import config
 
@@ -173,34 +176,40 @@ def _config_rows() -> str:
 # AutoContext defaults
 # ---------------------------------------------------------------------------
 
+
 def _autocontext_rows() -> str:
-    return _kv_table([
-        ("min_num_predict", "512"),
-        ("max_num_predict", "16,384"),
-        ("num_predict_growth", "1.5x"),
-        ("num_predict_shrinkage", "1.0x (disabled)"),
-        ("num_predict_chunk", "64"),
-        ("min_num_ctx", "4,096"),
-        ("max_num_ctx", "16,384"),
-        ("num_ctx_growth", "1.5x"),
-        ("num_ctx_shrinkage", "1.0x (disabled)"),
-        ("num_ctx_chunk", "256"),
-        ("max retries", "10"),
-        ("context cap check", "90% of num_ctx"),
-        ("prediction cap check", "90% of num_predict"),
-        ("initial ctx estimation", "4 chars/token heuristic"),
-    ])
+    return _kv_table(
+        [
+            ("min_num_predict", "512"),
+            ("max_num_predict", "16,384"),
+            ("num_predict_growth", "1.5x"),
+            ("num_predict_shrinkage", "1.0x (disabled)"),
+            ("num_predict_chunk", "64"),
+            ("min_num_ctx", "4,096"),
+            ("max_num_ctx", "16,384"),
+            ("num_ctx_growth", "1.5x"),
+            ("num_ctx_shrinkage", "1.0x (disabled)"),
+            ("num_ctx_chunk", "256"),
+            ("max retries", "10"),
+            ("context cap check", "90% of num_ctx"),
+            ("prediction cap check", "90% of num_predict"),
+            ("initial ctx estimation", "4 chars/token heuristic"),
+        ]
+    )
 
 
 # ---------------------------------------------------------------------------
 # Machine details
 # ---------------------------------------------------------------------------
 
+
 def _cpu_section(profile: dict) -> str:
     cpu = profile.get("cpu", {})
     rows = []
     if cpu.get("system"):
-        rows.append(("OS", f"{cpu['system']} {cpu.get('release', '')} {cpu.get('version', '')}"))
+        rows.append(
+            ("OS", f"{cpu['system']} {cpu.get('release', '')} {cpu.get('version', '')}")
+        )
     if cpu.get("processor"):
         rows.append(("Processor", cpu["processor"]))
     if cpu.get("machine"):
@@ -211,7 +220,9 @@ def _cpu_section(profile: dict) -> str:
     # Parse wmic output for Windows
     wmic = cpu.get("wmic", "")
     if wmic:
-        rows.append(("WMIC", f'<pre style="font-size:0.8em;margin:0">{html.escape(wmic)}</pre>'))
+        rows.append(
+            ("WMIC", f'<pre style="font-size:0.8em;margin:0">{html.escape(wmic)}</pre>')
+        )
     model_names = cpu.get("model_names", [])
     for mn in model_names:
         rows.append(("Model", html.escape(mn.split(":")[-1].strip())))
@@ -227,7 +238,12 @@ def _gpu_section(profile: dict) -> str:
         return '<p class="note">GPU info not available — nvidia-smi not found or no NVIDIA GPU.</p>'
     rows = []
     for g in gpu.get("gpus", []):
-        rows.append((f"GPU {g['index']} — {g['name']}", f"Memory: {g['memory']}, Driver: {g['driver']}"))
+        rows.append(
+            (
+                f"GPU {g['index']} — {g['name']}",
+                f"Memory: {g['memory']}, Driver: {g['driver']}",
+            )
+        )
     return _kv_table(rows)
 
 
@@ -258,7 +274,9 @@ def _ollama_section(profile: dict) -> str:
     if api.get("available"):
         rows.append(("API Version", html.escape(str(api.get("version", "unknown")))))
     else:
-        rows.append(("API Status", html.escape(f"Not available: {api.get('error', '')}")))
+        rows.append(
+            ("API Status", html.escape(f"Not available: {api.get('error', '')}"))
+        )
     return _kv_table(rows)
 
 
@@ -274,6 +292,7 @@ def _python_section(profile: dict) -> str:
 # ---------------------------------------------------------------------------
 # Ollama models table (from model_stats.json)
 # ---------------------------------------------------------------------------
+
 
 def _ollama_models_table(stats: dict) -> str:
     """Build a sortable table of Ollama models from model_stats.json."""
@@ -323,32 +342,54 @@ def _ollama_models_table(stats: dict) -> str:
 # Dataset
 # ---------------------------------------------------------------------------
 
+
 def _dataset_section() -> str:
-    return _kv_table([
-        ("Dataset", '<a href="https://github.com/marcusm117/human-eval-enhanced">human-eval-enhanced-202307</a> by marcusm117'),
-        ("Source", '<a href="https://github.com/openai/human-eval">openai/human-eval</a> — the original 164-problem benchmark'),
-        ("Fixes applied", (
-            '<a href="https://github.com/openai/human-eval/pull/23">openai/human-eval#23</a> — '
-            "community-contributed corrections to buggy test cases and docstrings in the original dataset "
-            "(wrong expected outputs, ambiguous prompts, off-by-one errors)"
-        )),
-        ("File", f"<code>{DATA_FILENAME}</code> — loaded from <code>data/</code> or downloaded to the platform cache"),
-    ])
+    return _kv_table(
+        [
+            (
+                "Dataset",
+                '<a href="https://github.com/marcusm117/human-eval-enhanced">human-eval-enhanced-202307</a> by marcusm117',
+            ),
+            (
+                "Source",
+                '<a href="https://github.com/openai/human-eval">openai/human-eval</a> — the original 164-problem benchmark',
+            ),
+            (
+                "Fixes applied",
+                (
+                    '<a href="https://github.com/openai/human-eval/pull/23">openai/human-eval#23</a> — '
+                    "community-contributed corrections to buggy test cases and docstrings in the original dataset "
+                    "(wrong expected outputs, ambiguous prompts, off-by-one errors)"
+                ),
+            ),
+            (
+                "File",
+                f"<code>{DATA_FILENAME}</code> — loaded from <code>data/</code> or downloaded to the platform cache",
+            ),
+        ]
+    )
 
 
 # ---------------------------------------------------------------------------
 # Vendored modules
 # ---------------------------------------------------------------------------
 
+
 def _vendored_section() -> str:
-    return _kv_table([
-        ("pocketflow.py", "Vendored from <a href=\"https://github.com/The-Pocket/PocketFlow\">PocketFlow</a> — lightweight async node/graph framework that I was playing with.")
-    ])
+    return _kv_table(
+        [
+            (
+                "pocketflow.py",
+                'Vendored from <a href="https://github.com/The-Pocket/PocketFlow">PocketFlow</a> — lightweight async node/graph framework that I was playing with.',
+            )
+        ]
+    )
 
 
 # ---------------------------------------------------------------------------
 # Main generator
 # ---------------------------------------------------------------------------
+
 
 def generate_setup_html() -> None:
     """Write the setup page to output/html/setup.html."""

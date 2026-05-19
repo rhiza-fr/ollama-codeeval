@@ -26,7 +26,6 @@ function toggleSecondary() {
 </script>"""
 
 
-
 def _compute_all_yield(all_data: list) -> None:
     """Compute yield score for each model in-place."""
     for d in all_data:
@@ -64,14 +63,20 @@ def _best_model_strategy(all_data, tasks_by_id, initial_task_ids, num_iterations
         iter_details = []
         for i in range(num_iterations):
             newly_solved = {
-                tid for tid in unsolved
+                tid
+                for tid in unsolved
                 if tasks_by_id.get(tid, {}).get(model_name)
                 and i < len(tasks_by_id[tid][model_name]["iterations"])
-                and tasks_by_id[tid][model_name]["iterations"][i].get("test_result", {}).get("exit_code") == 0
+                and tasks_by_id[tid][model_name]["iterations"][i]
+                .get("test_result", {})
+                .get("exit_code")
+                == 0
             }
             solved_count += len(newly_solved)
             unsolved -= newly_solved
-            iter_details.append({"solved": solved_count, "percent": solved_count / total_problems * 100})
+            iter_details.append(
+                {"solved": solved_count, "percent": solved_count / total_problems * 100}
+            )
         if solved_count > highest_score:
             highest_score = solved_count
             best_details = {"name": model_name, "iterations": iter_details}
@@ -90,7 +95,11 @@ def _build_strategy_html(best_details, highest_score, total_problems):
 def _build_error_table(all_data):
     base_data = [d for d in all_data if d.get("dataset", "humaneval") == "humaneval"]
     all_error_keys = sorted(base_data[0]["error_counts"].keys())
-    error_keys = [k for k in all_error_keys if any(d["error_counts"].get(k, 0) > 0 for d in base_data)]
+    error_keys = [
+        k
+        for k in all_error_keys
+        if any(d["error_counts"].get(k, 0) > 0 for d in base_data)
+    ]
     out = "<h2>Iteration Result Statistics</h2>"
     out += "<p>Counts of success and various error types across all iterations for each model.</p>"
     out += '\n    <table>\n      <thead><tr><th class="sortable">Model</th>'
@@ -98,9 +107,11 @@ def _build_error_table(all_data):
         out += f'<th class="sortable">{html.escape(key)}</th>'
     out += "</tr></thead>\n<tbody>\n"
     base_data = [d for d in all_data if d.get("dataset", "humaneval") == "humaneval"]
-    err_sorted = sorted(base_data, key=lambda x: x["error_counts"].get("Success", 0), reverse=True)
+    err_sorted = sorted(
+        base_data, key=lambda x: x["error_counts"].get("Success", 0), reverse=True
+    )
     for data in err_sorted:
-        out += f'<tr><td>{html.escape(_display_name(data))}</td>'
+        out += f"<tr><td>{html.escape(_display_name(data))}</td>"
         total_iters = sum(data["error_counts"].values())
         for key in error_keys:
             count = data["error_counts"].get(key, 0)
@@ -115,16 +126,30 @@ def _display_name(d):
 
 
 def _build_stat_cards(all_data):
-    base = [d for d in all_data if d.get("dataset", "humaneval") == "humaneval"
-            and not (d.get("tag") or "").startswith(("cascade", "champion"))]
+    base = [
+        d
+        for d in all_data
+        if d.get("dataset", "humaneval") == "humaneval"
+        and not (d.get("tag") or "").startswith(("cascade", "champion"))
+    ]
     best_pass = max(d["passed_tests"] / d["total_tests"] * 100 for d in base)
-    best_pass_model = next(_display_name(d) for d in base if d["passed_tests"] / d["total_tests"] * 100 == best_pass)
+    best_pass_model = next(
+        _display_name(d)
+        for d in base
+        if d["passed_tests"] / d["total_tests"] * 100 == best_pass
+    )
     best_spm = max(d.get("success_per_minute", 0) for d in base)
-    best_spm_model = next(_display_name(d) for d in base if d.get("success_per_minute", 0) == best_spm)
+    best_spm_model = next(
+        _display_name(d) for d in base if d.get("success_per_minute", 0) == best_spm
+    )
     fastest = min(d["average_time_per_iteration"] for d in base)
-    fastest_model = next(_display_name(d) for d in base if d["average_time_per_iteration"] == fastest)
+    fastest_model = next(
+        _display_name(d) for d in base if d["average_time_per_iteration"] == fastest
+    )
     best_yield = max(d.get("yield", 0) for d in base)
-    best_yield_model = next(_display_name(d) for d in base if d.get("yield", 0) == best_yield)
+    best_yield_model = next(
+        _display_name(d) for d in base if d.get("yield", 0) == best_yield
+    )
     return f"""<div class="stat-cards">
   <div class="stat-card accent-blue">
     <div class="stat-label">Best Pass Rate</div>
@@ -171,10 +196,10 @@ def _compute_distributions(all_data: list) -> dict:
     sp_x, sp_y = kde_xy([d.get("success_per_minute", 0) for d in models])
     yl_x, yl_y = kde_xy([d.get("yield", 0) * 100 for d in models])
     return {
-        "pass_rate":    make(pr_x, pr_y),
-        "avg_time":     make(at_x, at_y),
+        "pass_rate": make(pr_x, pr_y),
+        "avg_time": make(at_x, at_y),
         "pass_per_min": make(sp_x, sp_y),
-        "yield":        make(yl_x, yl_y),
+        "yield": make(yl_x, yl_y),
     }
 
 
@@ -182,13 +207,18 @@ def generate_index_html(all_data, no_cache=False):
     _compute_all_yield(all_data)
     distributions = _compute_distributions(all_data)
     from ollama_codeeval.report.html_model import generate_individual_html
+
     for d in all_data:
-        generate_individual_html(d["file"], d, no_cache=no_cache, distributions=distributions)
+        generate_individual_html(
+            d["file"], d, no_cache=no_cache, distributions=distributions
+        )
     num_iterations = 6
     initial_task_ids = {task["input"]["task_id"] for task in all_data[0]["tasks"]}
     total_problems = len(initial_task_ids)
     tasks_by_id = _build_tasks_by_id(all_data)
-    best_details, highest_score = _best_model_strategy(all_data, tasks_by_id, initial_task_ids, num_iterations)
+    best_details, highest_score = _best_model_strategy(
+        all_data, tasks_by_id, initial_task_ids, num_iterations
+    )
     strategy_html = _build_strategy_html(best_details, highest_score, total_problems)
     error_table_html = _build_error_table(all_data)
     stat_cards_html = _build_stat_cards(all_data)
@@ -240,12 +270,14 @@ The tasks are simple: complete the functions so that the generated code passes a
             cls = "sortable" if i in (1, 5) else "sortable col-secondary"
             f.write(f'<th class="{cls}">Pass@{i}</th>\n')
         f.write("\n    </tr></thead>\n<tbody>\n")
-        sorted_data = sorted(all_data, key=lambda x: x.get("passed_tests", 0), reverse=True)
+        sorted_data = sorted(
+            all_data, key=lambda x: x.get("passed_tests", 0), reverse=True
+        )
         for summary in sorted_data:
             if summary.get("dataset", "humaneval") != "humaneval":
                 continue
             percentages = "".join(
-                f'<td{"" if i in (1, 5) else " class=\"col-secondary\""} data-sort-value="{p:.4f}">{p:.2f}%</td>'
+                f'<td{"" if i in (1, 5) else ' class="col-secondary"'} data-sort-value="{p:.4f}">{p:.2f}%</td>'
                 for i, p in enumerate(summary["cum_pass_per_iteration"], start=1)
             )
             passed_percent = summary["passed_tests"] / summary["total_tests"] * 100
@@ -273,4 +305,5 @@ The tasks are simple: complete the functions so that the generated code passes a
         f.write(f"\n{error_table_html}\n</div>\n</body>\n</html>\n")
 
     from ollama_codeeval.report.html_cascade import generate_cascade_html
+
     generate_cascade_html(all_data)

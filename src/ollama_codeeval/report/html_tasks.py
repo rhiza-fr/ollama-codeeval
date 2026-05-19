@@ -74,16 +74,20 @@ def generate_task_pages(all_data):
     task_stats = []
     for tid, model_results in tasks_by_id.items():
         base_results = {k: v for k, v in model_results.items() if k not in rewrite_keys}
-        passed = sum(1 for t in base_results.values() if t["final_result"]["exit_code"] == 0)
+        passed = sum(
+            1 for t in base_results.values() if t["final_result"]["exit_code"] == 0
+        )
         total = len(base_results)
         rate = passed / total if total > 0 else 0
-        task_stats.append({
-            "task_id": tid,
-            "passed": passed,
-            "total": total,
-            "rate": rate,
-            "results": model_results,
-        })
+        task_stats.append(
+            {
+                "task_id": tid,
+                "passed": passed,
+                "total": total,
+                "rate": rate,
+                "results": model_results,
+            }
+        )
 
     # Sort by pass rate ascending (hardest first) for default
     task_stats.sort(key=lambda s: (s["rate"], _natural_sort_key(s["task_id"])))
@@ -93,11 +97,15 @@ def generate_task_pages(all_data):
         stat["difficulty"] = difficulty_signals.get(stat["task_id"])
 
     # Build model_key → html_file mapping for cross-links in task detail pages
-    model_html_files = {_model_key(data): data.get("html_file", "") for data in all_data}
+    model_html_files = {
+        _model_key(data): data.get("html_file", "") for data in all_data
+    }
 
     _generate_tasks_index(task_stats, base_names)
     for stat in task_stats:
-        _generate_task_detail(stat, base_names, task_inputs[stat["task_id"]], model_html_files)
+        _generate_task_detail(
+            stat, base_names, task_inputs[stat["task_id"]], model_html_files
+        )
 
 
 def _pass_bar(passed, total):
@@ -109,7 +117,7 @@ def _pass_bar(passed, total):
         f'<div style="display:flex;width:100%;height:10px;border-radius:3px;overflow:hidden" title="{passed}/{total} passed">'
         f'<div style="width:{pct:.1f}%;background:#16a34a"></div>'
         f'<div style="width:{fail_pct:.1f}%;background:#dc2626"></div>'
-        f'</div>'
+        f"</div>"
     )
 
 
@@ -126,34 +134,41 @@ def _chart_difficulty_scatter(task_stats: list[dict]) -> str:
     for label, items in groups.items():
         if not items:
             continue
-        traces.append({
-            "type": "scatter",
-            "mode": "markers",
-            "name": names[label],
-            "x": [s["rate"] * 100 for s in items],
-            "y": [s["difficulty"].prompt_chars if s.get("difficulty") else 0 for s in items],
-            "text": [
-                f"{s['task_id']}<br>"
-                f"Pass rate: {s['rate']*100:.0f}%<br>"
-                + (
-                    f"Examples: {s['difficulty'].n_examples}<br>"
-                    f"Chars: {s['difficulty'].prompt_chars}<br>"
-                    f"Iter-1 pass: {s['difficulty'].iter1_assertion_rate:.0%}"
-                    if s.get("difficulty") else ""
-                )
-                for s in items
-            ],
-            "hoverinfo": "text",
-            "marker": {
-                "size": [
-                    max(6, min(20, s["difficulty"].iter1_assertion_rate * 20))
-                    if s.get("difficulty") else 8
+        traces.append(
+            {
+                "type": "scatter",
+                "mode": "markers",
+                "name": names[label],
+                "x": [s["rate"] * 100 for s in items],
+                "y": [
+                    s["difficulty"].prompt_chars if s.get("difficulty") else 0
                     for s in items
                 ],
-                "color": colors[label],
-                "opacity": 0.7,
-            },
-        })
+                "text": [
+                    f"{s['task_id']}<br>"
+                    f"Pass rate: {s['rate'] * 100:.0f}%<br>"
+                    + (
+                        f"Examples: {s['difficulty'].n_examples}<br>"
+                        f"Chars: {s['difficulty'].prompt_chars}<br>"
+                        f"Iter-1 pass: {s['difficulty'].iter1_assertion_rate:.0%}"
+                        if s.get("difficulty")
+                        else ""
+                    )
+                    for s in items
+                ],
+                "hoverinfo": "text",
+                "marker": {
+                    "size": [
+                        max(6, min(20, s["difficulty"].iter1_assertion_rate * 20))
+                        if s.get("difficulty")
+                        else 8
+                        for s in items
+                    ],
+                    "color": colors[label],
+                    "opacity": 0.7,
+                },
+            }
+        )
 
     layout = {
         "xaxis": {"title": "Pass rate (%)", "range": [-2, 102]},
@@ -181,8 +196,8 @@ def _generate_tasks_index(task_stats, base_names):
         bar = _pass_bar(stat["passed"], stat["total"])
         rows += f"""<tr>
     <td><a href="task_{safe_id}.html">{html.escape(tid)}</a></td>
-    <td data-sort-value="{stat['passed']}">{stat['passed']}/{stat['total']}</td>
-    <td data-sort-value="{stat['rate']:.4f}">{rate_pct:.1f}%</td>
+    <td data-sort-value="{stat["passed"]}">{stat["passed"]}/{stat["total"]}</td>
+    <td data-sort-value="{stat["rate"]:.4f}">{rate_pct:.1f}%</td>
     <td>{label_val}</td>
     <td>{bar}</td>
 </tr>\n"""
@@ -225,7 +240,9 @@ def _chart_pass_times(stat: dict, model_names: list) -> str:
         task_data = stat["results"].get(mname)
         if task_data is None or task_data["final_result"]["exit_code"] != 0:
             continue
-        total_ns = sum(it.get("total_duration", 0) or 0 for it in task_data["iterations"])
+        total_ns = sum(
+            it.get("total_duration", 0) or 0 for it in task_data["iterations"]
+        )
         total_s = total_ns / 1_000_000_000.0
         if total_s > 0:
             passing.append((total_s, mname))
@@ -273,7 +290,9 @@ def _chart_pass_times(stat: dict, model_names: list) -> str:
     )
 
 
-def _generate_task_detail(stat, model_names, task_input, model_html_files: dict | None = None):
+def _generate_task_detail(
+    stat, model_names, task_input, model_html_files: dict | None = None
+):
     """Write a per-task detail page."""
     tid = stat["task_id"]
     safe_id = sanitize_task_id(tid)
@@ -293,7 +312,9 @@ def _generate_task_detail(stat, model_names, task_input, model_html_files: dict 
     else:
         difficulty_html = ""
 
-    prompt_html = html.escape(task_input.get("original_input_prompt") or task_input.get("prompt", ""))
+    prompt_html = html.escape(
+        task_input.get("original_input_prompt") or task_input.get("prompt", "")
+    )
     canonical_html = html.escape(task_input.get("canonical_solution", ""))
     test_html = html.escape(task_input.get("test", ""))
 
@@ -310,7 +331,8 @@ def _generate_task_detail(stat, model_names, task_input, model_html_files: dict 
         model_href = (model_html_files or {}).get(mname, "")
         model_cell = (
             f'<a href="{html.escape(model_href)}">{html.escape(mname)}</a>'
-            if model_href else html.escape(mname)
+            if model_href
+            else html.escape(mname)
         )
         result_entries.append((passed, total_s, model_cell, len(iterations)))
 
@@ -355,7 +377,9 @@ def _generate_task_detail(stat, model_names, task_input, model_html_files: dict 
                 test_result_html = f"<pre>{stderr}</pre>"
 
             iter_anchor = f"{model_anchor}_{i + 1}"
-            iter_content += f"<h4 id='{iter_anchor}'>Iteration {i + 1} ({it_time} s)</h4>\n"
+            iter_content += (
+                f"<h4 id='{iter_anchor}'>Iteration {i + 1} ({it_time} s)</h4>\n"
+            )
             iter_content += f"<details id='{iter_anchor}_prompt'><summary>Prompt</summary><pre>{prompt}</pre></details>\n"
             if thinking:
                 iter_content += f"<details id='{iter_anchor}_thinking'><summary>Thinking</summary><pre>{expandable_code_html(thinking)}</pre></details>\n"
@@ -369,7 +393,13 @@ def _generate_task_detail(stat, model_names, task_input, model_html_files: dict 
 
     passed_count = stat["passed"]
     total_count = stat["total"]
-    stat_card_color = "accent-green" if rate_pct >= 50 else "accent-blue" if rate_pct > 0 else "accent-amber"
+    stat_card_color = (
+        "accent-green"
+        if rate_pct >= 50
+        else "accent-blue"
+        if rate_pct > 0
+        else "accent-amber"
+    )
 
     page = f"""<!doctype html>
 <html>

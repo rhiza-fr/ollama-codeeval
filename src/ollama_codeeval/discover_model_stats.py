@@ -12,7 +12,7 @@ DEFAULT_CACHE = OUTPUT_BASE / "model_stats.json"
 
 
 def api_get(path: str) -> dict:
-    with urlopen(f"{OLLAMA_HOST}{path}") as r: #nosec
+    with urlopen(f"{OLLAMA_HOST}{path}") as r:  # nosec
         return json.loads(r.read())
 
 

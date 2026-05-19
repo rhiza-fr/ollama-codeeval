@@ -17,11 +17,16 @@ from ollama_codeeval.config import OUTPUT_BASE
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _run(args: list[str], timeout: float = 15.0) -> str | None:
     """Run a command and return stripped stdout; None on any failure."""
     try:
         cp = subprocess.run(
-            args, capture_output=True, text=True, timeout=timeout, encoding="utf-8",
+            args,
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+            encoding="utf-8",
             errors="replace",
         )
         return cp.stdout.strip() or None
@@ -33,10 +38,18 @@ def _run_multi(args: list[str], timeout: float = 15.0) -> dict[str, str | int]:
     """Run a command and return {'stdout': ..., 'stderr': ..., 'rc': ...}."""
     try:
         cp = subprocess.run(
-            args, capture_output=True, text=True, timeout=timeout, encoding="utf-8",
+            args,
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+            encoding="utf-8",
             errors="replace",
         )
-        return {"stdout": cp.stdout.strip(), "stderr": cp.stderr.strip(), "rc": cp.returncode}
+        return {
+            "stdout": cp.stdout.strip(),
+            "stderr": cp.stderr.strip(),
+            "rc": cp.returncode,
+        }
     except Exception as e:
         return {"stdout": "", "stderr": str(e), "rc": -1}
 
@@ -44,6 +57,7 @@ def _run_multi(args: list[str], timeout: float = 15.0) -> dict[str, str | int]:
 # ---------------------------------------------------------------------------
 # Probes
 # ---------------------------------------------------------------------------
+
 
 def probe_cpu() -> dict:
     """CPU information from Python platform module and (Windows) wmic."""
@@ -58,7 +72,17 @@ def probe_cpu() -> dict:
         pass
 
     if sys.platform == "win32":
-        wmic = _run(["cmd", "/c", "wmic", "cpu", "get", "Name,NumberOfCores,NumberOfLogicalProcessors", "/format:csv"])
+        wmic = _run(
+            [
+                "cmd",
+                "/c",
+                "wmic",
+                "cpu",
+                "get",
+                "Name,NumberOfCores,NumberOfLogicalProcessors",
+                "/format:csv",
+            ]
+        )
         if wmic:
             # Strip the Node column (first CSV field) which contains the machine name
             lines = wmic.splitlines()
@@ -100,29 +124,48 @@ def probe_cpu() -> dict:
 
 def probe_gpu() -> dict:
     """GPU information via nvidia-smi; returns empty dict if unavailable."""
-    res = _run_multi(["nvidia-smi", "--query-gpu=index,name,memory.total,driver_version",
-                       "--format=csv,noheader"])
+    res = _run_multi(
+        [
+            "nvidia-smi",
+            "--query-gpu=index,name,memory.total,driver_version",
+            "--format=csv,noheader",
+        ]
+    )
     if res["rc"] != 0:
-        return {"available": False, "error": res.get("stderr") or "nvidia-smi not found"}
+        return {
+            "available": False,
+            "error": res.get("stderr") or "nvidia-smi not found",
+        }
     lines = [ln for ln in str(res["stdout"]).splitlines() if ln.strip()]
     gpus = []
     for ln in lines:
         parts = [p.strip() for p in ln.split(",")]
         if len(parts) >= 4:
-            gpus.append({
-                "index": parts[0],
-                "name": parts[1],
-                "memory": parts[2],
-                "driver": parts[3],
-            })
+            gpus.append(
+                {
+                    "index": parts[0],
+                    "name": parts[1],
+                    "memory": parts[2],
+                    "driver": parts[3],
+                }
+            )
     return {"available": True, "gpus": gpus}
 
 
 def probe_docker() -> dict:
     """Docker version and whether the sandbox image exists."""
     version = _run(["docker", "--version"]) or "not available"
-    info_output = _run(["docker", "info", "--format", "{{.OSType}} {{.ServerVersion}} {{.KernelVersion}}"])
-    sandbox = _run(["docker", "image", "inspect", "python-sandbox", "--format", "{{.RepoTags}}"])
+    info_output = _run(
+        [
+            "docker",
+            "info",
+            "--format",
+            "{{.OSType}} {{.ServerVersion}} {{.KernelVersion}}",
+        ]
+    )
+    sandbox = _run(
+        ["docker", "image", "inspect", "python-sandbox", "--format", "{{.RepoTags}}"]
+    )
     return {
         "version": version,
         "info": info_output or "not available",
@@ -148,6 +191,7 @@ def probe_ollama_api() -> dict:
     from urllib.request import urlopen
 
     from ollama_codeeval.config import OLLAMA_HOST
+
     try:
         with urlopen(f"{OLLAMA_HOST}/api/version") as r:  # nosec B310
             data = json.loads(r.read())
@@ -169,6 +213,7 @@ def probe_python() -> dict:
 # ---------------------------------------------------------------------------
 # Collect & write
 # ---------------------------------------------------------------------------
+
 
 def collect() -> dict:
     """Run all probes and return a single system-profile dict.
