@@ -27,9 +27,10 @@ def _run(args: list[str], timeout: float = 15.0) -> str | None:
             timeout=timeout,
             encoding="utf-8",
             errors="replace",
+            check=False,
         )
         return cp.stdout.strip() or None
-    except Exception:
+    except Exception:  # noqa: BLE001
         return None
 
 
@@ -43,13 +44,14 @@ def _run_multi(args: list[str], timeout: float = 15.0) -> dict[str, str | int]:
             timeout=timeout,
             encoding="utf-8",
             errors="replace",
+            check=False,
         )
         return {
             "stdout": cp.stdout.strip(),
             "stderr": cp.stderr.strip(),
             "rc": cp.returncode,
         }
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         return {"stdout": "", "stderr": str(e), "rc": -1}
 
 
@@ -66,8 +68,8 @@ def probe_cpu() -> dict:
         "cpu_count_logical": getattr(platform, "_os", None),
     }
     try:
-        info["cpu_count_logical"] = platform._syscmd_uname().processor
-    except Exception:
+        info["cpu_count_logical"] = platform._syscmd_uname().processor  # ty: ignore[missing-attribute]
+    except Exception:  # noqa: BLE001, S110
         pass
 
     if sys.platform == "win32":
@@ -111,11 +113,11 @@ def probe_cpu() -> dict:
             try:
                 wv = sys.getwindowsversion()
                 info["version"] = f"{wv.major}.{wv.minor}.{wv.build}"
-            except Exception:
+            except Exception:  # noqa: BLE001
                 info["version"] = u.release
         else:
             info["version"] = u.version
-    except Exception:
+    except Exception:  # noqa: BLE001, S110
         pass
 
     return info

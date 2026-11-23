@@ -35,9 +35,8 @@ def extract_traceback_details(log_text: str) -> str:
         # Remove the summary
         if capturing and line.startswith("==========="):
             break
-        if capturing:
-            if not line.find("Use -v to get more diff") >= 0:
-                extracted_lines.append(line)
+        if capturing and not line.find("Use -v to get more diff") >= 0:
+            extracted_lines.append(line)
     # We remove the first empty line if it exists
     if extracted_lines and (not extracted_lines[0]):
         extracted_lines.pop(0)

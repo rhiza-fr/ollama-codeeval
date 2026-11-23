@@ -33,7 +33,7 @@ class TestSandboxInit:
     def test_default_timeout(self, mock_session_cls):
         from ollama_codeeval.sandbox import Sandbox
 
-        MockCls, instance = mock_session_cls
+        _MockCls, _instance = mock_session_cls
         sb = Sandbox(lang="python", image="test-image")
         assert sb.execution_timeout == 10.0
         sb.close()
@@ -117,7 +117,7 @@ class TestSandboxContextManager:
     def test_exit_returns_false_does_not_suppress_exceptions(self, mock_session_cls):
         from ollama_codeeval.sandbox import Sandbox
 
-        _, instance = mock_session_cls
-        with pytest.raises(ValueError):
+        _, _instance = mock_session_cls
+        with pytest.raises(ValueError):  # noqa: SIM117
             with Sandbox(lang="python", image="test-image"):
                 raise ValueError("test error")

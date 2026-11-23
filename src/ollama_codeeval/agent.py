@@ -2,6 +2,7 @@
 This module defines a set of nodes and functions to process prompts through a series of steps, including generating, executing, fixing, and responding. It uses a typed dictionary for parameters and a node-based structure to manage the workflow. The module includes methods for preparing, executing, and posting results at each stage of the process."""
 
 import hashlib
+import sys
 from typing import Any, TypedDict, cast
 
 from diskcache import Cache
@@ -66,9 +67,9 @@ def _get_sandbox() -> Sandbox:
                 image=SANDBOX_IMAGE,
                 execution_timeout=SANDBOX_TIMEOUT,
             )
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             print(f"Fatal: Error creating Docker Sandbox - is docker running?\n  {e}")
-            exit(1)
+            sys.exit(1)
     return _sandbox
 
 
@@ -143,7 +144,7 @@ class GenerateNode(Node):
         self, shared: dict[str, Any], prep_res: Any, exec_res: ThinkResponse | None
     ) -> str:
         """Update shared context with generation results and return status."""
-        shared["iterations"] = list()
+        shared["iterations"] = []
         if exec_res is None:
             shared["iterations"].append(
                 {"test_result": _fail_test_result("LLM Initial generation failed")}

@@ -11,7 +11,7 @@ def test_empty_prompt():
 
 def test_counts_examples():
     prompt = "def f(x):\n    '''\n    >>> f(1)\n    2\n    >>> f(2)\n    4\n    '''\n"
-    chars, n_ex, ckw = _prompt_metrics(prompt)
+    _chars, n_ex, _ckw = _prompt_metrics(prompt)
     assert n_ex == 2
 
 

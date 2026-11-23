@@ -136,11 +136,6 @@ def refresh_missing(cache_path: Path = DEFAULT_CACHE) -> dict:
     return stats
 
 
-def load_cache(cache_path: Path = DEFAULT_CACHE) -> dict:
-    """Load cached model stats from JSON file."""
-    return json.loads(cache_path.read_text())
-
-
 if __name__ == "__main__":
     try:
         discover()

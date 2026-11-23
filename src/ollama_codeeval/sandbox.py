@@ -50,7 +50,7 @@ class Sandbox:
                 }
             except SandboxTimeoutError as e:
                 return {"stdout": "", "stderr": str(e), "exit_code": 1}
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
                 return {"stdout": "", "stderr": str(e), "exit_code": 1}
 
     def __enter__(self):

@@ -47,9 +47,7 @@ def is_generative(model: dict) -> bool:
     if tag == "base":
         return False
     families = model.get("details", {}).get("families") or []
-    if any(f.lower() in SKIP_FAMILIES for f in families):
-        return False
-    return True
+    return not any(f.lower() in SKIP_FAMILIES for f in families)
 
 
 def parse_nvidia_smi(raw: str) -> dict[str, int]:
@@ -102,7 +100,7 @@ def loaded_models(host: str) -> list[str]:
     """Return names of currently loaded models from /api/ps."""
     try:
         return [m["name"] for m in api_get(host, "/api/ps").get("models", [])]
-    except Exception:
+    except Exception:  # noqa: BLE001
         return []
 
 
@@ -113,7 +111,7 @@ def ps_size_vram(host: str, model: str) -> int | None:
         for m in models:
             if m["name"] == model:
                 return m.get("size_vram", 0) // (1024 * 1024)
-    except Exception:
+    except Exception:  # noqa: BLE001, S110
         pass
     return None
 
@@ -121,7 +119,7 @@ def ps_size_vram(host: str, model: str) -> int | None:
 def unload_model(host: str, model: str) -> None:
     try:
         api_post(host, "/api/generate", {"model": model, "keep_alive": 0}, timeout=15)
-    except Exception:
+    except Exception:  # noqa: BLE001, S110
         pass
 
 
@@ -231,7 +229,7 @@ def bench_model_ctx(host: str, model: str, ctx: int) -> dict:
     print(f"    loading ctx={ctx}...", end=" ", flush=True)
     try:
         load_model(host, model, ctx)
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         record["error"] = f"load failed: {e}"
         print(f"FAILED: {e}")
         return record
@@ -251,7 +249,7 @@ def bench_model_ctx(host: str, model: str, ctx: int) -> dict:
         timing = run_benchmark(host, model, ctx)
         record.update(timing)
         print(f"decode={record.get('decode_tokens_per_sec')} tok/s")
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         record["error"] = f"benchmark failed: {e}"
         print(f"FAILED: {e}")
 

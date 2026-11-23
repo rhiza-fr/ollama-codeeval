@@ -7,6 +7,7 @@ showing cross-model results for each HumanEval task.
 import html
 import json
 import re
+from typing import Any
 
 from ollama_codeeval.report._shared import (
     CSS_BLOCK,
@@ -71,7 +72,7 @@ def generate_task_pages(all_data):
             tasks_by_id[tid][key] = task
 
     # Compute per-task stats — pass rate uses base models only for fair sorting
-    task_stats = []
+    task_stats: list[dict[str, Any]] = []
     for tid, model_results in tasks_by_id.items():
         base_results = {k: v for k, v in model_results.items() if k not in rewrite_keys}
         passed = sum(

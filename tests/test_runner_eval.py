@@ -60,7 +60,7 @@ class TestRunEvalSingleWorker:
         assert "model_b" in results
 
     def test_writes_jsonl_when_output_dir_set(self, tmp_path):
-        with (
+        with (  # noqa: SIM117
             _mock_client(),
             patch("ollama_codeeval.runner.run_flow", return_value=SUCCESS_LOG),
         ):
@@ -69,7 +69,7 @@ class TestRunEvalSingleWorker:
         assert mock_append.call_count == len(DATASET)
 
     def test_no_jsonl_when_output_dir_none(self):
-        with (
+        with (  # noqa: SIM117
             _mock_client(),
             patch("ollama_codeeval.runner.run_flow", return_value=SUCCESS_LOG),
         ):
@@ -78,7 +78,7 @@ class TestRunEvalSingleWorker:
         mock_append.assert_not_called()
 
     def test_think_slug_in_filename(self, tmp_path):
-        with (
+        with (  # noqa: SIM117
             _mock_client(),
             patch("ollama_codeeval.runner.run_flow", return_value=SUCCESS_LOG),
         ):
@@ -92,7 +92,7 @@ class TestRunEvalSingleWorker:
             assert "_think" in c[0][0]
 
     def test_dataset_name_in_filename(self, tmp_path):
-        with (
+        with (  # noqa: SIM117
             _mock_client(),
             patch("ollama_codeeval.runner.run_flow", return_value=SUCCESS_LOG),
         ):
@@ -111,7 +111,7 @@ class TestRunEvalSingleWorker:
     def test_existing_output_file_deleted(self, tmp_path):
         existing = tmp_path / "results_humaneval_qwen3_nothink.jsonl"
         existing.write_text("old data\n")
-        with (
+        with (  # noqa: SIM117
             _mock_client(),
             patch("ollama_codeeval.runner.run_flow", return_value=SUCCESS_LOG),
         ):
@@ -150,7 +150,7 @@ class TestRunEvalMultipleWorkers:
         assert "exception" in failed["final_result"]["stderr"].lower()
 
     def test_parallel_workers_write_jsonl(self, tmp_path):
-        with (
+        with (  # noqa: SIM117
             _mock_client(),
             patch("ollama_codeeval.runner.run_flow", return_value=SUCCESS_LOG),
         ):

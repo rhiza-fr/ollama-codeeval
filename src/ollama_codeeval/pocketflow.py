@@ -240,10 +240,11 @@ class Node(BaseNode):
         Returns:
             Any: The result of the `exec` method or the `exec_fallback` method.
         """
-        for self.cur_retry in range(self.max_retries):
+        for attempt in range(self.max_retries):
+            self.cur_retry = attempt
             try:
                 return self.exec(prep_res=prep_res)
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
                 if self.cur_retry == self.max_retries - 1:
                     return self.exec_fallback(prep_res=prep_res, exc=e)
                 if self.wait > 0:
@@ -539,7 +540,7 @@ class AsyncNode(Node):
         for i in range(self.max_retries):
             try:
                 return await self.exec_async(prep_res=prep_res)
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
                 if i == self.max_retries - 1:
                     return await self.exec_fallback_async(prep_res=prep_res, exc=e)
                 if self.wait > 0:
@@ -595,7 +596,7 @@ class AsyncBatchNode(AsyncNode, BatchNode):
     The post_async method receives the list of results.
     """
 
-    async def _exec(self, prep_res: list[Any] | None) -> list[Any]:  # type: ignore[override]
+    async def _exec(self, prep_res: list[Any] | None) -> list[Any]:  # type: ignore[override]  # ty: ignore[incompatible-method-override]
         """The async execution wrapper for the batch node.
 
         This method wraps the `_exec` method of the parent class to process a
@@ -621,7 +622,7 @@ class AsyncParallelBatchNode(AsyncNode, BatchNode):
     The post_async method receivses the list of results.
     """
 
-    async def _exec(self, prep_res: list[Any] | None) -> list[Any]:  # type: ignore[override]
+    async def _exec(self, prep_res: list[Any] | None) -> list[Any]:  # type: ignore[override]  # ty: ignore[incompatible-method-override]
         """The async execution wrapper for the parallel batch node.
 
         This method wraps the `_exec` method of the parent class to process a

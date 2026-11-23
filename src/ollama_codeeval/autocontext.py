@@ -19,6 +19,8 @@ import threading
 
 from ollama_think import Client, ThinkResponse
 
+logger = logging.getLogger(__name__)
+
 
 class AutoContextClient(Client):
     """A Client that automatically adjusts prediction and context sizes.
@@ -100,10 +102,10 @@ class AutoContextClient(Client):
         self._stats_lock = threading.Lock()
         self._load_durations = {}
         self._num_ctx_stats = {}
-        logging.debug(
+        logger.debug(
             f"AutoContextClient: initialized with min_num_predict={min_num_predict}, max_num_predict={max_num_predict}, num_predict_growth={num_predict_growth}, num_predict_shrinkage={num_predict_shrinkage}"
         )
-        logging.debug(
+        logger.debug(
             f"AutoContextClient: initialized with min_num_ctx={min_num_ctx}, max_num_ctx={max_num_ctx}, num_ctx_growth={num_ctx_growth}, num_ctx_shrinkage={num_ctx_shrinkage}"
         )
 
@@ -200,7 +202,7 @@ class AutoContextClient(Client):
             stats["avg_num_tokens"] = (
                 current_avg_tokens * current_count + num_tokens
             ) / stats["count"]
-            logging.debug(self._num_ctx_stats)
+            logger.debug(self._num_ctx_stats)
 
     _MAX_RETRIES = 10
 
@@ -224,7 +226,7 @@ class AutoContextClient(Client):
             self._num_ctx = self._roundupToChunk(
                 estimated_num_ctx + self._num_predict, self.num_ctx_chunk
             )
-            logging.debug(
+            logger.debug(
                 f"AutoContextClient: To accommodate prompt/messages + num_predict growing num_ctx from {old_num_ctx} to {self._num_ctx}"
             )
         kwargs["options"]["num_predict"] = int(self._num_predict)
@@ -233,7 +235,7 @@ class AutoContextClient(Client):
         prompt_tokens = response.get("prompt_eval_count", 0)
         eval_tokens = response.get("eval_count", 0)
         if not isinstance(prompt_tokens, int) or not isinstance(eval_tokens, int):
-            logging.warning(
+            logger.warning(
                 f"AutoContextClient: Non-integer token counts in response: prompt_eval_count={prompt_tokens}, eval_count={eval_tokens}"
             )
             # quit early to avoid further issues
@@ -247,7 +249,7 @@ class AutoContextClient(Client):
         if not isinstance(prompt_eval_duration, int) or not isinstance(
             eval_duration, int
         ):
-            logging.warning(
+            logger.warning(
                 f"AutoContextClient: Non-integer durations in response: prompt_eval_duration={prompt_eval_duration}, eval_duration={eval_duration}"
             )
             # quit early to avoid further issues
@@ -256,7 +258,7 @@ class AutoContextClient(Client):
             prompt_eval_duration + eval_duration
         ) / 1000000000  # convert ns to s
         tokens_per_second = total_tokens / total_duration if total_duration > 0 else 0
-        logging.debug(
+        logger.debug(
             f"AutoContextClient: total tokens {total_tokens},  load duration {load_duration:0.2f}s, inference duration {total_duration:0.2f}s tokens/s {tokens_per_second:0.2f}"
         )
         with self._stats_lock:
@@ -276,7 +278,7 @@ class AutoContextClient(Client):
                 )
                 if self._num_ctx > old_num_ctx:
                     grew_something = True
-                    logging.info(
+                    logger.info(
                         f"AutoContextClient: Response truncated and prompt_tokens is high, growing num_ctx from {old_num_ctx} to {self._num_ctx}"
                     )
             old_num_predict = self._num_predict
@@ -293,7 +295,7 @@ class AutoContextClient(Client):
                 )
                 if self._num_predict > old_num_predict:
                     grew_something = True
-                    logging.info(
+                    logger.info(
                         f"AutoContextClient: Response truncated and eval_tokens is high, growing num_predict from {old_num_predict} to {self._num_predict}"
                     )
             if not grew_something:
@@ -311,18 +313,18 @@ class AutoContextClient(Client):
                 )
                 if self._num_predict > old_num_predict:
                     grew_something = True
-                    logging.error(
+                    logger.error(
                         f"AutoContextClient: Response truncated (fallback), growing num_predict from {old_num_predict} to {self._num_predict}"
                     )
             if grew_something and _retry_depth < self._MAX_RETRIES:
                 return self.call(*args, _retry_depth=_retry_depth + 1, **kwargs)
             else:
                 if _retry_depth >= self._MAX_RETRIES:
-                    logging.warning(
+                    logger.warning(
                         f"AutoContextClient: Response truncated, but reached max retries ({self._MAX_RETRIES}). Returning response."
                     )
                 else:
-                    logging.warning(
+                    logger.warning(
                         "AutoContextClient: Response truncated, but already at max context/predict size. Returning response."
                     )
                 return response

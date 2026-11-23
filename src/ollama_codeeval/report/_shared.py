@@ -171,15 +171,6 @@ def expandable_code_html(s: str, lang: str = "language-python") -> str:
     )
 
 
-def truncate_str(s: str) -> str:
-    if len(s) > _DISPLAY_TRUNCATE_LIMIT:
-        return (
-            s[:_DISPLAY_TRUNCATE_LIMIT]
-            + f" [truncated {len(s) - _DISPLAY_TRUNCATE_LIMIT} characters]"
-        )
-    return s
-
-
 def ns_to_seconds(ns):
     if ns is None:
         return "N/A"

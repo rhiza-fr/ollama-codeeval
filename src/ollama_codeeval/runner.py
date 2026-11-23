@@ -21,6 +21,8 @@ from ollama_codeeval.cascade_agent import run_cascade_flow
 from ollama_codeeval.config import OUTPUT_BASE
 from ollama_codeeval.jsonl_io import append_jsonl
 
+logger = logging.getLogger(__name__)
+
 
 def slugify(value, allow_unicode=False):
     """Normalize and sanitize a string to create a URL-friendly slug.
@@ -50,7 +52,7 @@ def slugify(value, allow_unicode=False):
 
 async def run_eval(
     dataset: list[dict[str, str]],
-    models: list[str] = ["qwen3"],
+    models: list[str] | None = None,
     think=False,
     output_dir: str | None = str(OUTPUT_BASE),
     workers: int = 1,
@@ -61,7 +63,9 @@ async def run_eval(
     """Run evaluation on a dataset using specified models. Executes each model on each task in the dataset,
     logs the execution results, and saves them to JSONL files if an output directory is provided.
     Use workers > 1 to run multiple problems concurrently (useful for small models)."""
-    results = dict()
+    if models is None:
+        models = ["qwen3"]
+    results = {}
     with Progress(
         SpinnerColumn(),
         TextColumn("[bold blue]{task.description}"),
@@ -89,14 +93,14 @@ async def run_eval(
                 )
                 if output_file_for_model.exists():
                     output_file_for_model.unlink()
-            results[model] = dict()
+            results[model] = {}
 
             if cascade is None:
-                logging.info("Warming up model %s", model)
+                logger.info("Warming up model %s", model)
                 client.call(model, "Say hello.", think=False, options={})
             else:
                 for cascade_model, _ in cascade:
-                    logging.info("Warming up cascade model %s", cascade_model)
+                    logger.info("Warming up cascade model %s", cascade_model)
                     client.call(cascade_model, "Say hello.", think=False, options={})
 
             if workers <= 1:
@@ -115,7 +119,7 @@ async def run_eval(
             else:
                 _jsonl_lock = threading.Lock()
 
-                def _run_one(row):
+                def _run_one(row, model=model):
                     if cascade is not None:
                         return row["task_id"], run_cascade_flow(
                             row, cascade=cascade, think=think
@@ -129,7 +133,7 @@ async def run_eval(
                             task_id, execution_log = future.result()
                         except Exception:
                             task_id = futures[future]
-                            logging.exception("Worker failed for %s", task_id)
+                            logger.exception("Worker failed for %s", task_id)
                             execution_log = {
                                 "task_id": task_id,
                                 "iterations": [],
@@ -147,11 +151,11 @@ async def run_eval(
                         progress.advance(problem_task)
 
             if cascade is None:
-                logging.info("Unloading model %s", model)
+                logger.info("Unloading model %s", model)
                 client.stop(model)
             else:
                 for cascade_model, _ in cascade:
-                    logging.info("Unloading cascade model %s", cascade_model)
+                    logger.info("Unloading cascade model %s", cascade_model)
                     client.stop(cascade_model)
             progress.advance(model_task)
     return results
@@ -166,6 +170,4 @@ def is_error(results: dict[str, object] | None) -> bool:
         bool: True if there is an error, False otherwise."""
     if not results:
         return True
-    if results.get("stderr", "") or results.get("stdout", ""):
-        return True
-    return False
+    return bool(results.get("stderr", "") or results.get("stdout", ""))

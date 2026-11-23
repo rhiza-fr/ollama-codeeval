@@ -607,9 +607,9 @@ def _resolve_model_stats(model_name: str, stats: dict) -> dict | None:
         return stats[candidate]
     # model_name is likely a resolved display name (e.g. "qwen3:8.2b" from "qwen3:latest").
     # Find the original stats key that resolves to it.
-    for key in stats:
+    for key, value in stats.items():
         if resolve_model_name(key, stats) == model_name:
-            return stats[key]
+            return value
     return None
 
 

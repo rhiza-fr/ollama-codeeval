@@ -3,6 +3,7 @@
 import json
 import math
 from pathlib import Path
+from typing import Any
 
 from ollama_codeeval.config import OUTPUT_BASE
 from ollama_codeeval.report._shared import (
@@ -38,7 +39,7 @@ def _load_vram_data(model_stats: dict | None) -> dict[str, float]:
         non_error = [e for e in entries if e.get("error") is None]
         pool = non_error if non_error else entries
         # Prefer ctx closest to 8192 among valid entries
-        best = sorted(pool, key=lambda e: abs(e["ctx"] - 8192))[0]
+        best = min(pool, key=lambda e: abs(e["ctx"] - 8192))
         total_vram = sum(best["vram_delta_mb"].values())
         resolved = resolve_model_name(raw_name, model_stats)
         result[resolved] = total_vram
@@ -83,7 +84,7 @@ def generate_selector_html(all_data: list) -> None:
             caps = info.get("capabilities") or []
             tools_by_resolved[resolved] = "tools" in caps
 
-    rows = []
+    rows: list[dict[str, Any]] = []
     for d in all_data:
         if d.get("dataset", "humaneval") != "humaneval":
             continue

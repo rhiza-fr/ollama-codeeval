@@ -116,7 +116,7 @@ def generate_variant(task: dict, sandbox: Sandbox) -> dict | None:
             variant = _try_generate(task, sandbox)
             if variant is not None:
                 return variant
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001
             console.print(f"    [yellow]attempt {attempt} error: {exc}[/yellow]")
     return None
 
@@ -129,7 +129,7 @@ def _truncate_to_stub(code: str) -> str:
     for i, line in enumerate(lines):
         stripped = line.strip()
         if not in_docstring:
-            if stripped.startswith('"""') or stripped.startswith("'''"):
+            if stripped.startswith(('"""', "'''")):
                 docstring_char = stripped[:3]
                 # Check if it's a one-liner docstring: opens and closes on same line
                 rest = stripped[3:]

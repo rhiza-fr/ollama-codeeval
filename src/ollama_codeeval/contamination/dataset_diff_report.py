@@ -116,7 +116,7 @@ def main() -> None:
         args.output.write_text(report, encoding="utf-8")
         print(f"Report written to {args.output}")
     else:
-        sys.stdout.reconfigure(encoding="utf-8")
+        sys.stdout.reconfigure(encoding="utf-8")  # ty: ignore[missing-union-attribute]
         sys.stdout.write(report)
 
 

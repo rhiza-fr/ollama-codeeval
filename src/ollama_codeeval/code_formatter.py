@@ -19,18 +19,17 @@ def ruff_fix(code: str) -> tuple[str, int, str]:
         (fixed_code, exit_code, remaining_errors) where exit_code == 0 means
         ruff found no remaining issues after auto-fix.
     """
-    tmp = tempfile.NamedTemporaryFile(
+    with tempfile.NamedTemporaryFile(
         mode="w", suffix=".py", delete=False, encoding="utf-8"
-    )
-    try:
+    ) as tmp:
         tmp.write(code)
-        tmp.close()
-
+    try:
         # Step 1: ruff format
         subprocess.run(
             ["ruff", "format", tmp.name],
             capture_output=True,
             encoding="utf-8",
+            check=False,
         )
 
         # Step 2: ruff check --fix, only real errors
@@ -38,6 +37,7 @@ def ruff_fix(code: str) -> tuple[str, int, str]:
             ["ruff", "check", "--fix", "--select", "E9,F63,F7,F82", tmp.name],
             capture_output=True,
             encoding="utf-8",
+            check=False,
         )
 
         # Read back the fixed code

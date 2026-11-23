@@ -149,7 +149,7 @@ def load_all_models(
                 first = json.loads(f.readline())
             raw = first.get("model", name)
             model_name = resolve_model_name(raw, model_stats)
-        except Exception:
+        except Exception:  # noqa: BLE001, S110
             pass
 
         tasks, load_time_s = parse_jsonl(path, model_stats)

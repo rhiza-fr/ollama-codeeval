@@ -183,7 +183,7 @@ class TestExecuteNode:
         mock_cache.get.return_value = None
         mock_sandbox = MagicMock()
         mock_sandbox.run.return_value = {"stdout": "raw", "stderr": "", "exit_code": 0}
-        with patch.object(agent_module, "cache", mock_cache):
+        with patch.object(agent_module, "cache", mock_cache):  # noqa: SIM117
             with patch("ollama_codeeval.agent._get_sandbox", return_value=mock_sandbox):
                 with patch(
                     "ollama_codeeval.agent.consume_test_result",
@@ -199,7 +199,7 @@ class TestExecuteNode:
         mock_cache.get.return_value = None
         mock_sandbox = MagicMock()
         mock_sandbox.run.return_value = None
-        with patch.object(agent_module, "cache", mock_cache):
+        with patch.object(agent_module, "cache", mock_cache):  # noqa: SIM117
             with patch("ollama_codeeval.agent._get_sandbox", return_value=mock_sandbox):
                 result = node.exec("some test code")
         assert result is not None
@@ -376,7 +376,7 @@ class TestRuffFixNode:
         mock_cache = MagicMock()
         mock_cache.get.return_value = None
         ruff_result = ("def foo():\n    return None\n", 0, "")
-        with patch.object(agent_module, "cache", mock_cache):
+        with patch.object(agent_module, "cache", mock_cache):  # noqa: SIM117
             with patch("ollama_codeeval.agent.ruff_fix", return_value=ruff_result):
                 result = node.exec("def foo():\n    return None\n")
         assert result == ruff_result

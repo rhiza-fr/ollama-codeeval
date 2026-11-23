@@ -246,7 +246,7 @@ def _model_info_header(summary_data: dict, jsonl_file: str | Path) -> str:
     For regular runs, shows a single line.
     """
     _tag = summary_data.get("tag") or ""
-    is_cascade = _tag.startswith("cascade") or _tag.startswith("champion")
+    is_cascade = _tag.startswith(("cascade", "champion"))
 
     if is_cascade:
         models = _cascade_models_from_jsonl(jsonl_file)

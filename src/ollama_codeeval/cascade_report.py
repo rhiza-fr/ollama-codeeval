@@ -213,11 +213,11 @@ def maximize_last_tier(
     best_count = len(best_s["passing_tasks"])
     best_model, best_budget = last_model, last_budget
 
-    for m in model_data:
+    for m, m_data in model_data.items():
         if m in prior_models:
             continue
         for b in range(1, max_budget + 1):
-            s = model_summary(model_data[m], b, task_ids=entry_uncov)
+            s = model_summary(m_data, b, task_ids=entry_uncov)
             n = len(s["passing_tasks"])
             if n > best_count:
                 best_count, best_model, best_budget = n, m, b
