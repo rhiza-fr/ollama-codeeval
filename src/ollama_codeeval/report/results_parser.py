@@ -6,11 +6,11 @@ import logging
 import os
 from collections import defaultdict
 
-from ollama_codeeval.report.metrics import _parse_tag_from_filename
-from ollama_codeeval.report._shared import normalize_dataset
-
 import numpy as np
 from rich.logging import RichHandler
+
+from ollama_codeeval.report._shared import normalize_dataset
+from ollama_codeeval.report.metrics import _parse_tag_from_filename
 
 logging.basicConfig(
     level=logging.INFO,

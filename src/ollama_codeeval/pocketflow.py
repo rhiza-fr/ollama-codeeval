@@ -15,7 +15,7 @@ class BaseNode:
     def __init__(self) -> None:
         """Initializes a `BaseNode` object."""
         self.params: dict[str, ParamValue] = {}
-        self.successors: dict[str, "BaseNode"] = {}
+        self.successors: dict[str, BaseNode] = {}
 
     def set_params(self, params: dict[str, ParamValue]) -> None:
         """Sets the parameters of the node.
@@ -25,7 +25,7 @@ class BaseNode:
         """
         self.params = params
 
-    def next(self, node: "BaseNode", action: str = "default") -> "BaseNode":
+    def next(self, node: BaseNode, action: str = "default") -> BaseNode:
         """Sets the next node in the flow.
 
         Args:
@@ -52,7 +52,6 @@ class BaseNode:
         Returns:
             Any | None: The result of the pre-processing logic.
         """
-        pass
 
     def exec(self, prep_res: Any) -> Any | None:
         """The execution logic of the node.
@@ -65,7 +64,6 @@ class BaseNode:
         Returns:
             Any | None: The result of the execution logic.
         """
-        pass
 
     def post(self, shared: dict[str, Any], prep_res: Any, exec_res: Any) -> Any | None:
         """The post-processing logic of the node.
@@ -80,7 +78,6 @@ class BaseNode:
         Returns:
             Any | None: The result of the post-processing logic.
         """
-        pass
 
     def _exec(self, prep_res: Any) -> Any:
         """The execution wrapper for the node.
@@ -123,7 +120,7 @@ class BaseNode:
             warnings.warn(message="Node won't run successors. Use Flow.")
         return self._run(shared=shared)
 
-    def __rshift__(self, other: "BaseNode") -> "BaseNode":
+    def __rshift__(self, other: BaseNode) -> BaseNode:
         """Sets the next node in the flow.
 
         This method is an alias for the `next` method.
@@ -482,7 +479,6 @@ class AsyncNode(Node):
         Returns:
             Any: The result of the pre-processing logic.
         """
-        pass
 
     async def exec_async(self, prep_res: Any) -> Any:
         """The async execution logic of the node.
@@ -495,7 +491,6 @@ class AsyncNode(Node):
         Returns:
             Any: The result of the execution logic.
         """
-        pass
 
     async def exec_fallback_async(self, prep_res: Any, exc: Exception) -> Any:
         """The async fallback mechanism for the node.
@@ -528,7 +523,6 @@ class AsyncNode(Node):
             Any: The result of the post-processing logic or an 'action'
             returning None is the same as returning "default"
         """
-        pass
 
     async def _exec(self, prep_res: Any) -> Any:
         """The async execution wrapper for the node.

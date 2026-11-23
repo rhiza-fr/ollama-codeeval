@@ -12,18 +12,18 @@ import argparse
 from pathlib import Path
 
 from ollama_codeeval.cascade_optimizer import (
+    calibrate_load_times,
+    greedy_cascade,
+    load_all_models,
     load_model_stats,
     load_vram_bench,
-    calibrate_load_times,
-    load_all_models,
-    greedy_cascade,
 )
 from ollama_codeeval.cascade_report import (
-    retrospective_check,
-    prune_harmful_tiers,
-    print_cascade,
-    reorder_cascade_for_yield,
     maximize_last_tier,
+    print_cascade,
+    prune_harmful_tiers,
+    reorder_cascade_for_yield,
+    retrospective_check,
 )
 
 

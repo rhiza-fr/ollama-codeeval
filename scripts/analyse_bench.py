@@ -65,8 +65,7 @@ def main():
             delta_dict = r.get("vram_delta_mb") or {}
             sum_delta = sum(delta_dict.values())
 
-            if sum_delta > max_delta:
-                max_delta = sum_delta
+            max_delta = max(max_delta, sum_delta)
 
             pre = r.get("prefill_tokens_per_sec")
             dec = r.get("decode_tokens_per_sec")

@@ -1,6 +1,7 @@
 """Tests for html_context._extract_context_stats."""
 
 import pytest
+
 from ollama_codeeval.report.html_context import (
     _build_summary_table,
     _chart_explosion_rate,

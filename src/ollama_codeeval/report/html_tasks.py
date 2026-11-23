@@ -8,7 +8,6 @@ import html
 import json
 import re
 
-from ollama_codeeval.report.analyse_difficulty import compute_difficulty_signals
 from ollama_codeeval.report._shared import (
     CSS_BLOCK,
     EXPAND_SCRIPT,
@@ -22,6 +21,7 @@ from ollama_codeeval.report._shared import (
     ns_to_seconds,
     sanitize_task_id,
 )
+from ollama_codeeval.report.analyse_difficulty import compute_difficulty_signals
 
 
 def _natural_sort_key(text):

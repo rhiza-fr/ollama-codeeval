@@ -17,9 +17,9 @@ from ollama_codeeval.report.html_context import generate_context_html
 from ollama_codeeval.report.html_index import generate_index_html
 from ollama_codeeval.report.html_rewrite import generate_rewrite_html
 from ollama_codeeval.report.html_selector import generate_selector_html
+from ollama_codeeval.report.html_setup import generate_setup_html
 from ollama_codeeval.report.html_tasks import generate_task_pages
 from ollama_codeeval.report.html_yield import generate_yield_html
-from ollama_codeeval.report.html_setup import generate_setup_html
 from ollama_codeeval.report.metrics import process_jsonl_file
 
 logging.basicConfig(

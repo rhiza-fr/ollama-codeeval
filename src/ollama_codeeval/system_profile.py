@@ -12,7 +12,6 @@ from pathlib import Path
 
 from ollama_codeeval.config import OUTPUT_BASE
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
@@ -67,7 +66,7 @@ def probe_cpu() -> dict:
         "cpu_count_logical": getattr(platform, "_os", None),
     }
     try:
-        info["cpu_count_logical"] = getattr(platform, "_syscmd_uname")().processor
+        info["cpu_count_logical"] = platform._syscmd_uname().processor
     except Exception:
         pass
 

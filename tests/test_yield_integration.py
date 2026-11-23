@@ -1,4 +1,5 @@
 import pytest
+
 from ollama_codeeval.report._shared import compute_yield
 from ollama_codeeval.report.html_index import _compute_all_yield
 

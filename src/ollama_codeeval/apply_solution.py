@@ -62,10 +62,10 @@ def _dedent_code(code: str) -> str:
     if not non_empty_lines:
         return code  # Return original string if no content
     # Find the minimum indentation
-    min_indent = min((len(line) - len(line.lstrip()) for line in non_empty_lines))
+    min_indent = min(len(line) - len(line.lstrip()) for line in non_empty_lines)
     if min_indent > 0:
         # Remove the minimum indentation from all lines
-        return "\n".join((line[min_indent:] for line in lines))
+        return "\n".join(line[min_indent:] for line in lines)
     return code
 
 

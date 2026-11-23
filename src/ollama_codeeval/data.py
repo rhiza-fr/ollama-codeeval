@@ -4,9 +4,9 @@ import gzip
 import json
 import os
 import urllib.request
+from collections.abc import Iterator
 from enum import Enum
 from pathlib import Path
-from typing import Iterator
 
 DATA_URL = "https://github.com/marcusm117/human-eval-enhanced/blob/main/data/human-eval-enhanced-202307.jsonl.gz"
 DATA_FILENAME = "human-eval-enhanced-202307.jsonl.gz"

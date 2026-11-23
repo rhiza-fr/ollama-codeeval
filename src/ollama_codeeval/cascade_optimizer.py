@@ -93,8 +93,7 @@ def parse_jsonl(path: Path, _model_stats: dict) -> tuple[dict, float]:
                     first_pass_iter = i + 1
                     break
                 load_ns = it.get("load_duration") or 0
-                if load_ns > max_load_ns:
-                    max_load_ns = load_ns
+                max_load_ns = max(max_load_ns, load_ns)
             tasks[task_id] = {
                 "first_pass_iter": first_pass_iter,
                 "iter_durations": iter_durations,

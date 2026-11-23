@@ -1,15 +1,14 @@
 """Tests for pure helper functions across runner, agent, pytest_wrapper, and code_formatter modules."""
 
-from ollama_codeeval.runner import is_error, slugify
 from ollama_codeeval.agent import generate_prompt
+from ollama_codeeval.code_formatter import compact_ruff_error
 from ollama_codeeval.pytest_wrapper import (
     clean_test_output,
     consume_test_result,
     extract_traceback_details,
     generate_test,
 )
-from ollama_codeeval.code_formatter import compact_ruff_error
-
+from ollama_codeeval.runner import is_error, slugify
 
 # --- slugify ---
 

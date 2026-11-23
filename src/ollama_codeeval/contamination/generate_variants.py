@@ -34,9 +34,6 @@ from ollama_codeeval.config import (
     SANDBOX_LANG,
     SANDBOX_TIMEOUT,
 )
-from ollama_codeeval.data import load_data
-from ollama_codeeval.sandbox import Sandbox
-
 from ollama_codeeval.contamination.oracle import run_oracle
 from ollama_codeeval.contamination.prompts import (
     FUZZ_INPUTS_PROMPT,
@@ -49,6 +46,8 @@ from ollama_codeeval.contamination.variant_utils import (
     extract_function_name,
     parse_input_list,
 )
+from ollama_codeeval.data import load_data
+from ollama_codeeval.sandbox import Sandbox
 
 MORPH_MODEL = "qwen3-coder"
 QUESTION_MODEL = "gpt-oss:20b"
@@ -106,7 +105,7 @@ def _format_examples(pairs: list[tuple]) -> str:
     lines = []
     for args, result in pairs:
         args_str = ", ".join(repr(a) for a in args)
-        lines.append(f"  f({args_str}) -> {repr(result)}")
+        lines.append(f"  f({args_str}) -> {result!r}")
     return "\n".join(lines)
 
 
@@ -240,27 +239,29 @@ def main():
     succeeded = 0
     failed_ids = []
 
-    with Sandbox(
-        lang=SANDBOX_LANG, image=SANDBOX_IMAGE, execution_timeout=SANDBOX_TIMEOUT
-    ) as sandbox:
-        with gzip.open(output_path, "wt", encoding="utf-8") as out_f:
-            with Progress(
-                SpinnerColumn(),
-                TextColumn("[bold blue]{task.description}"),
-                BarColumn(),
-                MofNCompleteColumn(),
-            ) as progress:
-                prog = progress.add_task("Variants", total=len(tasks))
-                for task in tasks:
-                    tid = task["task_id"]
-                    progress.update(prog, description=f"  {tid}")
-                    variant = generate_variant(task, sandbox)
-                    if variant is not None:
-                        out_f.write(json.dumps(variant) + "\n")
-                        succeeded += 1
-                    else:
-                        failed_ids.append(tid)
-                    progress.advance(prog)
+    with (
+        Sandbox(
+            lang=SANDBOX_LANG, image=SANDBOX_IMAGE, execution_timeout=SANDBOX_TIMEOUT
+        ) as sandbox,
+        gzip.open(output_path, "wt", encoding="utf-8") as out_f,
+        Progress(
+            SpinnerColumn(),
+            TextColumn("[bold blue]{task.description}"),
+            BarColumn(),
+            MofNCompleteColumn(),
+        ) as progress,
+    ):
+        prog = progress.add_task("Variants", total=len(tasks))
+        for task in tasks:
+            tid = task["task_id"]
+            progress.update(prog, description=f"  {tid}")
+            variant = generate_variant(task, sandbox)
+            if variant is not None:
+                out_f.write(json.dumps(variant) + "\n")
+                succeeded += 1
+            else:
+                failed_ids.append(tid)
+            progress.advance(prog)
 
     console.print(
         f"\n[green]Done.[/green] {succeeded}/{len(tasks)} variants generated."

@@ -27,7 +27,7 @@ def _build_oracle_script(solution_code: str, entry_point: str, inputs: list) -> 
     return f"""\
 {solution_code}
 
-_inputs = {repr(inputs)}
+_inputs = {inputs!r}
 for _args in _inputs:
     try:
         _result = {entry_point}(*_args)

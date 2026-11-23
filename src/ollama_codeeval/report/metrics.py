@@ -147,7 +147,7 @@ def process_jsonl_file(jsonl_file, no_cache=False):
     dataset = normalize_dataset(tasks[0].get("dataset", "humaneval"))
     tag = _parse_tag_from_filename(jsonl_file)
     total_tests = len(tasks)
-    passed_tests = sum((1 for task in tasks if task["final_result"]["exit_code"] == 0))
+    passed_tests = sum(1 for task in tasks if task["final_result"]["exit_code"] == 0)
     failed_tests = total_tests - passed_tests
     total_time = 0
 

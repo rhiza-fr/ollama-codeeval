@@ -107,7 +107,7 @@ class FormatOriginalQuestionNode(Node):
         Generates a prompt using the provided input and entry point, storing it in the shared dictionary."""
         input = shared.get("input", {})
         if not input:
-            return None
+            return
         shared["generated_prompt"] = generate_prompt(
             input["prompt"], input["entry_point"]
         )

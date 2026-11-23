@@ -2,6 +2,7 @@
 from unittest.mock import MagicMock
 
 import pytest
+
 from ollama_codeeval.contamination.contamination_report import pair_results
 from ollama_codeeval.contamination.oracle import run_oracle
 from ollama_codeeval.contamination.variant_utils import (
