@@ -42,6 +42,8 @@ def eval(
     from ollama_codeeval.runner import is_error, run_eval
 
     client.host = host or OLLAMA_HOST
+    # The shared client was built at import time; repoint its HTTP transport too.
+    client._client.base_url = client.host
 
     dataset_path = DATA_DIR / f"{dataset}.jsonl.gz"
     if not dataset_path.exists():
